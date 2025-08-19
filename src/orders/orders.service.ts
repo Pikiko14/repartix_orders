@@ -1,0 +1,225 @@
+import { Utils } from 'src/commons/utils/utils';
+import { RpcException } from '@nestjs/microservices';
+import { CreateOrderDto } from './dto/create-order.dto';
+import { UpdateOrderDto } from './dto/update-order.dto';
+import { HttpStatus, Injectable } from '@nestjs/common';
+import { CacheService } from 'src/commons/cache/cache.service';
+import { QueryParamDto } from 'src/commons/dto/query-param.dto';
+import { OrdersRepository } from './repository/orders.repository';
+import { FindAndDeleteOrderDto } from './dto/find-and-delete-order.dto';
+import { OrderEntity } from './entities/order.entity';
+
+@Injectable()
+export class OrdersService {
+  constructor(
+    private readonly utils: Utils,
+    private readonly cacheService: CacheService,
+    private readonly repository: OrdersRepository,
+  ) {}
+
+  async create(createOrderDto: CreateOrderDto) {
+    try {
+      await this.cacheService.removeByPrefix(
+        `keyv:${createOrderDto.parent_id}:orders:list`,
+      );
+
+      // creo el cliente
+      const order = await this.repository.create(createOrderDto);
+
+      // return response
+      return {
+        success: true,
+        data: order,
+        message: 'Order created successfully',
+      };
+    } catch (error) {
+      throw new RpcException({
+        message: error.message,
+        status: HttpStatus.BAD_REQUEST,
+      });
+    }
+  }
+
+  async findAll(queryParams: QueryParamDto) {
+    const cacheKey = `${queryParams.parent_id}:orders:list:${JSON.stringify(queryParams)}`;
+    let orders = await this.cacheService.getItem(cacheKey);
+    if (orders) {
+      return {
+        success: true,
+        orders,
+        message: 'Orders list (from cache)',
+      };
+    }
+
+    try {
+      let query: Record<string, any> = {
+        parent_id: queryParams.parent_id,
+      };
+
+      // validamos la busqueda
+      if (queryParams.search) {
+        const searchRegex = new RegExp(queryParams.search as string, 'i');
+        const orConditions: any[] = [
+          { 'client.name': searchRegex },
+          { 'client.last_name': searchRegex },
+          { 'client.address': searchRegex },
+          { 'client.phone': searchRegex },
+          { 'client.email': searchRegex },
+          { 'client.dni': searchRegex },
+          { 'sender.brand_name': searchRegex },
+          { 'sender.brand_phone': searchRegex },
+        ];
+
+        query = {
+          parent_id: queryParams.parent_id,
+          $or: orConditions,
+        };
+      }
+
+      // valido filtro por fecha
+      const { startOfMonth, endOfMonth } = this.utils.getMonthRange(new Date());
+      let startOfDay = new Date(startOfMonth.setHours(-5, 0, 0, 0));
+      let endOfDay = new Date(endOfMonth.setHours(18, 59, 59, 999));
+
+      if (queryParams.from && queryParams.to) {
+        startOfDay = new Date(queryParams.from.setHours(-5, 0, 0, 0));
+        endOfDay = new Date(queryParams.to.setHours(18, 59, 59, 999));
+      }
+      query.date = { $gte: startOfDay, $lte: endOfDay };
+
+      // validamos el filtro
+      if (queryParams.filter) {
+        const filterObj = JSON.parse(queryParams.filter);
+        const keys = Object.keys(filterObj);
+        for (const el of keys) {
+          query[el] = filterObj[el];
+        }
+      }
+
+      // validamos la data de la paginacion
+      const page = Number(queryParams.page) || 1;
+      const perPage = Number(queryParams.perPage) || 7;
+      const skip = (page - 1) * perPage;
+
+      orders = await this.repository.paginate(query, skip, perPage);
+
+      // Guardamos el resultado en cache por 10 minutos
+      await this.cacheService.setItem(cacheKey, orders);
+
+      return {
+        success: true,
+        orders,
+        message: 'Orders list',
+      };
+    } catch (error) {
+      throw new RpcException(error.message);
+    }
+  }
+
+  async findOne(findDto: FindAndDeleteOrderDto) {
+    try {
+      const cacheKey = `${findDto.parent_id}:orders:list:${JSON.stringify(findDto)}`;
+      let order = await this.cacheService.getItem(cacheKey);
+      if (order) {
+        return {
+          success: true,
+          order,
+          message: 'Orders data (from cache)',
+        };
+      }
+
+      // creo el cliente
+      order = await this.repository.find({
+        key: '_id',
+        value: findDto.id,
+      });
+
+      if (!order)
+        throw new RpcException({
+          message: `Order with this id: ${findDto.id} not found`,
+          status: HttpStatus.NOT_FOUND,
+          error: true,
+        });
+
+      await this.cacheService.setItem(cacheKey, order, 300000);
+
+      // return response
+      return {
+        success: true,
+        data: order,
+        message: 'Order data',
+      };
+    } catch (error) {
+      throw new RpcException({
+        message: error.message,
+        status: HttpStatus.BAD_REQUEST,
+      });
+    }
+  }
+
+  async update(id: string, updateOrderDto: UpdateOrderDto) {
+    let order = await this.repository.find({
+      key: '_id',
+      value: id,
+    });
+
+    if (!order)
+      throw new RpcException({
+        message: `Order with this id: ${id} not found`,
+        status: HttpStatus.NOT_FOUND,
+        error: true,
+      });
+    
+    await this.cacheService.removeByPrefix(
+      `keyv:${updateOrderDto.parent_id}:orders:list`,
+    );
+
+    try {
+      order = await this.repository.update(id, updateOrderDto);
+
+      // return data
+      return {
+        success: true,
+        data: order,
+        message: 'Order update success',
+      };
+    } catch (error) {
+      throw new RpcException(error.message);
+    }
+  }
+
+  async remove(deleteDto: FindAndDeleteOrderDto) {
+    await this.cacheService.removeByPrefix(
+      `keyv:${deleteDto.parent_id}:orders:list`,
+    );
+
+    let order: OrderEntity | void = await this.repository.find({
+      key: '_id',
+      value: deleteDto.id,
+    });
+
+    if (!order) {
+      throw new RpcException({
+        message: `Order with this id: ${deleteDto.id} not found`,
+        status: HttpStatus.NOT_FOUND,
+        error: true,
+      });
+    }
+
+    try {
+      order = await this.repository.delete(
+        deleteDto.id,
+        deleteDto.parent_id,
+      );
+
+      // return data
+      return {
+        success: true,
+        data: order,
+        message: 'Order delete success',
+      };
+    } catch (error) {
+      throw new RpcException(error.message);
+    }
+  }
+}
