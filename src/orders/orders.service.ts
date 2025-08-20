@@ -74,6 +74,7 @@ export class OrdersService {
           { 'client.dni': searchRegex },
           { 'sender.brand_name': searchRegex },
           { 'sender.brand_phone': searchRegex },
+          { reference: searchRegex },
         ];
 
         query = {
