@@ -27,7 +27,7 @@ export class OrdersService {
       const totalUserOder = await this.repository.countByParentId(
         createOrderDto.parent_id,
       );
-      const reference = `${((totalUserOder || 0) + 1)}`.padStart(8, '0');
+      const reference = `${(totalUserOder || 0) + 1}`.padStart(8, '0');
       createOrderDto.reference = reference;
 
       const order = await this.repository.create(createOrderDto);
@@ -58,59 +58,60 @@ export class OrdersService {
     }
 
     try {
-      let query: Record<string, any> = {
-        parent_id: queryParams.parent_id,
-      };
+      // construimos un $and global
+      const andConditions: any[] = [{ parent_id: queryParams.parent_id }];
 
-      // validamos la busqueda
+      // validamos la búsqueda
       if (queryParams.search) {
         const searchRegex = new RegExp(queryParams.search as string, 'i');
-        const orConditions: any[] = [
-          { 'client.name': searchRegex },
-          { 'client.last_name': searchRegex },
-          { 'client.address': searchRegex },
-          { 'client.phone': searchRegex },
-          { 'client.email': searchRegex },
-          { 'client.dni': searchRegex },
-          { 'sender.brand_name': searchRegex },
-          { 'sender.brand_phone': searchRegex },
-          { reference: searchRegex },
-        ];
-
-        query = {
-          parent_id: queryParams.parent_id,
-          $or: orConditions,
-        };
+        andConditions.push({
+          $or: [
+            { 'client.name': searchRegex },
+            { 'client.last_name': searchRegex },
+            { 'client.address': searchRegex },
+            { 'client.phone': searchRegex },
+            { 'client.email': searchRegex },
+            { 'client.dni': searchRegex },
+            { 'sender.brand_name': searchRegex },
+            { 'sender.brand_phone': searchRegex },
+            { reference: searchRegex },
+          ],
+        });
       }
 
-      // valido filtro por fecha
+      // rango de fechas
       const { startOfMonth, endOfMonth } = this.utils.getMonthRange(new Date());
-      let startOfDay = new Date(startOfMonth.setHours(-5, 0, 0, 0));
-      let endOfDay = new Date(endOfMonth.setHours(18, 59, 59, 999));
+      let startOfDay = new Date(startOfMonth.setHours(0, 0, 0, 0));
+      let endOfDay = new Date(endOfMonth.setHours(23, 59, 59, 999));
 
       if (queryParams.from && queryParams.to) {
-        startOfDay = new Date(queryParams.from.setHours(-5, 0, 0, 0));
-        endOfDay = new Date(queryParams.to.setHours(18, 59, 59, 999));
+        const from = new Date(queryParams.from);
+        const to = new Date(queryParams.to);
+        startOfDay = new Date(from.setHours(0, 0, 0, 0));
+        endOfDay = new Date(to.setHours(23, 59, 59, 999));
       }
-      query.date = { $gte: startOfDay, $lte: endOfDay };
 
-      // validamos el filtro
+      andConditions.push({ date: { $gte: startOfDay, $lte: endOfDay } });
+
+      // filtros adicionales
       if (queryParams.filters) {
         const filterObj = JSON.parse(queryParams.filters);
-        const keys = Object.keys(filterObj);
-        for (const el of keys) {
-          query[el] = filterObj[el];
+        for (const key of Object.keys(filterObj)) {
+          andConditions.push({ [key]: filterObj[key] });
         }
       }
 
-      // validamos la data de la paginacion
+      // query final
+      const query: Record<string, any> = { $and: andConditions };
+
+      // paginación
       const page = Number(queryParams.page) || 1;
       const perPage = Number(queryParams.perPage) || 7;
       const skip = (page - 1) * perPage;
 
       orders = await this.repository.paginate(query, skip, perPage);
 
-      // Guardamos el resultado en cache por 10 minutos
+      // cache por 10 min
       await this.cacheService.setItem(cacheKey, orders);
 
       return {
@@ -176,7 +177,7 @@ export class OrdersService {
         status: HttpStatus.NOT_FOUND,
         error: true,
       });
-    
+
     await this.cacheService.removeByPrefix(
       `keyv:${updateOrderDto.parent_id}:orders:list`,
     );
@@ -214,10 +215,7 @@ export class OrdersService {
     }
 
     try {
-      order = await this.repository.delete(
-        deleteDto.id,
-        deleteDto.parent_id,
-      );
+      order = await this.repository.delete(deleteDto.id, deleteDto.parent_id);
 
       // return data
       return {
