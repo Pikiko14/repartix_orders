@@ -86,7 +86,8 @@ export class OrdersRepository implements IOrdersRepository {
       'cash_on_delivery',
       'cash_amount',
       'settled_to_sender',
-      'order_price'
+      'order_price',
+      'reference'
     ],
   ): Promise<PaginationResponseInterface> {
     try {
@@ -108,6 +109,21 @@ export class OrdersRepository implements IOrdersRepository {
         totalPages,
         totalItems: totalUsers,
       };
+    } catch (error: any) {
+      throw new RpcException({
+        message: error.message,
+        status: HttpStatus.BAD_REQUEST,
+      });
+    }
+  }
+
+  /**
+   * count order by user
+   * @param { string } parentId
+   */
+  public async countByParentId(parentId: string): Promise<number> {
+    try {
+      return await this.model.countDocuments({ parent_id: parentId });
     } catch (error: any) {
       throw new RpcException({
         message: error.message,

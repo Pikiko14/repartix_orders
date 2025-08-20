@@ -216,4 +216,8 @@ export class CreateOrderDto {
   @IsOptional()
   @IsNumber()
   order_price?: number;
+
+  @IsOptional()
+  @IsNumber()
+  reference?: string;
 }

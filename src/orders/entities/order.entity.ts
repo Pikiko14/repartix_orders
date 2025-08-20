@@ -74,4 +74,6 @@ export class OrderEntity {
   parent_id?: string;
 
   order_price: number;
+
+  reference?: string;
 }

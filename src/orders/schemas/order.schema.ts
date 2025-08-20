@@ -88,6 +88,8 @@ export class Order {
   @Prop({ index: true }) parent_id?: string;
 
   @Prop({ required: true }) order_price: number;
+
+  @Prop({ index: true }) reference?: string;
 }
 
 const OrderSchema = SchemaFactory.createForClass(Order);

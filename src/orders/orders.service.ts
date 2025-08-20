@@ -23,7 +23,13 @@ export class OrdersService {
         `keyv:${createOrderDto.parent_id}:orders:list`,
       );
 
-      // creo el cliente
+      // creo la orden
+      const totalUserOder = await this.repository.countByParentId(
+        createOrderDto.parent_id,
+      );
+      const reference = `${((totalUserOder || 0) + 1)}`.padStart(8, '0');
+      createOrderDto.reference = reference;
+
       const order = await this.repository.create(createOrderDto);
 
       // return response
