@@ -31,4 +31,4 @@ RUN npm install --production --legacy-peer-deps
 # Copiar el código compilado o necesario desde el builder
 COPY --from=builder /usr/src/clients_microservice ./
 
-EXPOSE 3000
+EXPOSE 3007
