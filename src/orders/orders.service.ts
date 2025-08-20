@@ -95,8 +95,8 @@ export class OrdersService {
       query.date = { $gte: startOfDay, $lte: endOfDay };
 
       // validamos el filtro
-      if (queryParams.filter) {
-        const filterObj = JSON.parse(queryParams.filter);
+      if (queryParams.filters) {
+        const filterObj = JSON.parse(queryParams.filters);
         const keys = Object.keys(filterObj);
         for (const el of keys) {
           query[el] = filterObj[el];
