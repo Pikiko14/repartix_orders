@@ -90,6 +90,9 @@ export class Order {
   @Prop({ required: true }) order_price: number;
 
   @Prop({ index: true }) reference?: string;
+
+  @Prop({ index: true }) city?: string;
+  @Prop({ index: true }) zone?: string;
 }
 
 const OrderSchema = SchemaFactory.createForClass(Order);

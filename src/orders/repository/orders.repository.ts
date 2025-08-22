@@ -87,7 +87,9 @@ export class OrdersRepository implements IOrdersRepository {
       'cash_amount',
       'settled_to_sender',
       'order_price',
-      'reference'
+      'reference',
+      'city',
+      'zone'
     ],
   ): Promise<PaginationResponseInterface> {
     try {
