@@ -10,7 +10,6 @@ import {
   IsBoolean,
 } from 'class-validator';
 import { Type } from 'class-transformer';
-import { Zone } from './../../../../cities_microservice/src/cities/schemas/cities.schema';
 
 export class CoordsDto {
   @IsNumber()
@@ -136,6 +135,20 @@ export class PaymentDto {
   date: Date;
 }
 
+export class ZoneDto {
+  @IsString()
+  @IsNotEmpty()
+  name: string;
+
+  @IsString()
+  @IsNotEmpty()
+  price: string;
+
+  @IsString()
+  @IsNotEmpty()
+  cod_zone: string;
+}
+
 export class CreateOrderDto {
   @IsOptional()
   @IsDate()
@@ -229,18 +242,4 @@ export class CreateOrderDto {
   @ValidateNested()
   @Type(() => CourierDto)
   zone?: ZoneDto;
-}
-
-export class ZoneDto {
-  @IsString()
-  @IsNotEmpty()
-  name: string;
-
-  @IsString()
-  @IsNotEmpty()
-  price: string;
-
-  @IsString()
-  @IsNotEmpty()
-  cod_zone: string;
 }
