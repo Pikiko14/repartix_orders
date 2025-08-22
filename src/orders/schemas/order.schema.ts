@@ -60,6 +60,13 @@ class Payment {
   @Prop({ required: true }) date: Date;
 }
 
+@Schema({ _id: false })
+class Zone {
+  @Prop({ required: false, index: true }) name: string;
+  @Prop({ required: false }) price: string;
+  @Prop({ required: false }) cod_zone: string;
+}
+
 // schema de order
 @Schema({ timestamps: true })
 export class Order {
@@ -92,7 +99,7 @@ export class Order {
   @Prop({ index: true }) reference?: string;
 
   @Prop({ index: true }) city?: string;
-  @Prop({ index: true }) zone?: string;
+  @Prop({ type: Zone }) zone?: Zone;
 }
 
 const OrderSchema = SchemaFactory.createForClass(Order);

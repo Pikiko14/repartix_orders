@@ -78,5 +78,9 @@ export class OrderEntity {
   reference?: string;
 
   city?: string;
-  zone?: string;
+  zone?: {
+    name?: string;
+    price?: string;
+    cod_zone?: string;
+  };
 }
