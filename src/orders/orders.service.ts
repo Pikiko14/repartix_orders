@@ -154,7 +154,7 @@ export class OrdersService {
       // return response
       return {
         success: true,
-        data: order,
+        order,
         message: 'Order data',
       };
     } catch (error) {
