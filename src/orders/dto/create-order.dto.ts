@@ -196,7 +196,7 @@ export class CreateOrderDto {
   products: ProductDto[];
 
   
-  @IsNotEmpty()
+  @IsOptional()
   @ValidateNested()
   @Type(() => CourierDto)
   courier: CourierDto;
