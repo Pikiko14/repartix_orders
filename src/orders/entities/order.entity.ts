@@ -59,7 +59,7 @@ export class OrderEntity {
 
   cash_on_delivery?: boolean;
 
-  cash_amount?: number;
+  cash_amount?: string;
 
   settled_to_sender?: boolean;
 

@@ -206,8 +206,8 @@ export class CreateOrderDto {
   cash_on_delivery?: boolean;
 
   @IsOptional()
-  @IsNumber()
-  cash_amount?: number;
+  @IsString()
+  cash_amount?: string;
 
   @IsOptional()
   @IsBoolean()

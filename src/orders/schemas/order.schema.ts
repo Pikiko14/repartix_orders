@@ -86,7 +86,7 @@ export class Order {
   @Prop({ type: Courier }) courier?: Courier;
 
   @Prop({ default: false, index: true }) cash_on_delivery?: boolean;
-  @Prop({ default: 0 }) cash_amount?: number;
+  @Prop({ default: 0 }) cash_amount?: string;
   @Prop({ default: false, index: true }) settled_to_sender?: boolean;
 
   @Prop() notes?: string;
