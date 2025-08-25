@@ -232,7 +232,7 @@ export class CreateOrderDto {
   order_price?: number;
 
   @IsOptional()
-  @IsNumber()
+  @IsString()
   reference?: string;
 
   @IsString()
