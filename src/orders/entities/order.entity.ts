@@ -46,8 +46,8 @@ export class OrderEntity {
     name: string;
     description?: string;
     quantity: number;
-    unit_price: number;
-    total_price?: number;
+    unit_price: string;
+    total_price?: string;
     weight?: number;
   }[];
 

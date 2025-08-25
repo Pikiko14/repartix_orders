@@ -40,8 +40,8 @@ class Product {
   @Prop() sku?: string;
   @Prop({ required: true }) name: string;
   @Prop() description?: string;
-  @Prop({ required: true }) quantity: number;
-  @Prop({ required: true }) unit_price: number;
+  @Prop({ required: true }) quantity: string;
+  @Prop({ required: true }) unit_price: string;
   @Prop() total_price?: number;
   @Prop() weight?: number;
 }
