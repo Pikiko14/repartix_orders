@@ -1,13 +1,14 @@
+import { envs } from 'src/configuration';
 import { Utils } from 'src/commons/utils/utils';
-import { RpcException } from '@nestjs/microservices';
+import { OrderEntity } from './entities/order.entity';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
-import { HttpStatus, Injectable } from '@nestjs/common';
 import { CacheService } from 'src/commons/cache/cache.service';
 import { QueryParamDto } from 'src/commons/dto/query-param.dto';
+import { HttpStatus, Inject, Injectable } from '@nestjs/common';
+import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { OrdersRepository } from './repository/orders.repository';
 import { FindAndDeleteOrderDto } from './dto/find-and-delete-order.dto';
-import { OrderEntity } from './entities/order.entity';
 
 @Injectable()
 export class OrdersService {
@@ -15,6 +16,7 @@ export class OrdersService {
     private readonly utils: Utils,
     private readonly cacheService: CacheService,
     private readonly repository: OrdersRepository,
+    @Inject(envs.nats_service_name) private readonly client: ClientProxy,
   ) {}
 
   async create(createOrderDto: CreateOrderDto) {
@@ -31,6 +33,11 @@ export class OrdersService {
       createOrderDto.reference = reference;
 
       const order = await this.repository.create(createOrderDto);
+
+      // validate and print order
+      if (createOrderDto?.print_guide) {
+        this.client.emit('create-guide', createOrderDto);
+      }
 
       // return response
       return {
@@ -184,6 +191,11 @@ export class OrdersService {
 
     try {
       order = await this.repository.update(id, updateOrderDto);
+
+      // validate and print order
+      if (updateOrderDto?.print_guide) {
+        this.client.emit('create-guide', updateOrderDto);
+      }
 
       // return data
       return {
