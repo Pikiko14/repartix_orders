@@ -100,6 +100,7 @@ export class Order {
 
   @Prop({ index: true }) city?: string;
   @Prop({ type: Zone }) zone?: Zone;
+  @Prop({ default: false }) print_guide?: boolean;
 }
 
 const OrderSchema = SchemaFactory.createForClass(Order);
