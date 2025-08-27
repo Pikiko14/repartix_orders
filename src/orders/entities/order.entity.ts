@@ -83,4 +83,5 @@ export class OrderEntity {
     price?: string;
     cod_zone?: string;
   };
+  print_guide?: boolean;
 }

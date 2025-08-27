@@ -94,7 +94,7 @@ export class Order {
 
   @Prop({ index: true }) parent_id?: string;
 
-  @Prop({ required: true }) order_price: number;
+  @Prop({ required: true }) order_price: string;
 
   @Prop({ index: true }) reference?: string;
 

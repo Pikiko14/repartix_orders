@@ -228,8 +228,8 @@ export class CreateOrderDto {
   parent_id?: string;
 
   @IsOptional()
-  @IsNumber()
-  order_price?: number;
+  @IsString()
+  order_price?: string;
 
   @IsOptional()
   @IsString()
@@ -241,6 +241,10 @@ export class CreateOrderDto {
 
   @IsOptional()
   @ValidateNested()
-  @Type(() => CourierDto)
+  @Type(() => ZoneDto)
   zone?: ZoneDto;
+
+  @IsOptional()
+  @IsBoolean()
+  print_guide?: boolean;
 }

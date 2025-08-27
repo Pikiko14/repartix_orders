@@ -89,7 +89,7 @@ export class OrdersRepository implements IOrdersRepository {
       'order_price',
       'reference',
       'city',
-      'zone.name'
+      'zone.name',
     ],
   ): Promise<PaginationResponseInterface> {
     try {
