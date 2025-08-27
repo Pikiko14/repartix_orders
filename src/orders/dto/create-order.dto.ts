@@ -195,7 +195,6 @@ export class CreateOrderDto {
   @Type(() => ProductDto)
   products: ProductDto[];
 
-  
   @IsOptional()
   @ValidateNested()
   @Type(() => CourierDto)
@@ -228,8 +227,9 @@ export class CreateOrderDto {
   parent_id?: string;
 
   @IsOptional()
-  @IsString()
-  order_price?: string;
+  @IsNumber()
+  @Type(() => Number)
+  order_price?: Number;
 
   @IsOptional()
   @IsString()
