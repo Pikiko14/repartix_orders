@@ -91,6 +91,7 @@ export class OrdersRepository implements IOrdersRepository {
       'reference',
       'city',
       'zone.name',
+      'print_guide',
     ],
   ): Promise<PaginationResponseInterface> {
     try {
