@@ -186,12 +186,12 @@ export class OrdersService {
         error: true,
       });
 
-    if (order.status !== 'pending')
-      throw new RpcException({
-        message: `The order with ID ${id} must be in pending status to be updated.`,
-        status: HttpStatus.BAD_REQUEST,
-        error: true,
-      });
+    //if (order.status !== 'pending')
+    //  throw new RpcException({
+    //    message: `The order with ID ${id} must be in pending status to be updated.`,
+    //    status: HttpStatus.BAD_REQUEST,
+    //    error: true,
+    //  });
 
     await this.cacheService.removeByPrefix(
       `keyv:${updateOrderDto.parent_id}:orders:list`,
@@ -228,13 +228,19 @@ export class OrdersService {
       value: deleteDto.id,
     });
 
-    if (!order) {
+    if (!order)
       throw new RpcException({
         message: `Order with this id: ${deleteDto.id} not found`,
         status: HttpStatus.NOT_FOUND,
         error: true,
       });
-    }
+
+    if (order.status !== 'pending')
+      throw new RpcException({
+        message: `The order with ID ${deleteDto.id} must be in pending status to be deleted.`,
+        status: HttpStatus.BAD_REQUEST,
+        error: true,
+      });
 
     try {
       order = await this.repository.delete(deleteDto.id, deleteDto.parent_id);
