@@ -1,6 +1,6 @@
 import { envs } from 'src/configuration';
 import { Utils } from 'src/commons/utils/utils';
-import { OrderEntity } from './entities/order.entity';
+import { OrderEntity, StatusEnum } from './entities/order.entity';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
 import { UpdateStatusDto } from './dto/update-status.dto';
@@ -198,6 +198,8 @@ export class OrdersService {
     );
 
     try {
+      if (!updateOrderDto.print_guide) updateOrderDto.status = StatusEnum.pending; 
+
       order = await this.repository.update(id, updateOrderDto);
 
       // validate and print order
