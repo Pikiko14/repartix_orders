@@ -3,6 +3,7 @@ import { Utils } from 'src/commons/utils/utils';
 import { OrderEntity } from './entities/order.entity';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
+import { UpdateStatusDto } from './dto/update-status.dto';
 import { CacheService } from 'src/commons/cache/cache.service';
 import { QueryParamDto } from 'src/commons/dto/query-param.dto';
 import { HttpStatus, Inject, Injectable } from '@nestjs/common';
@@ -185,6 +186,13 @@ export class OrdersService {
         error: true,
       });
 
+    if (order.status !== 'pending')
+      throw new RpcException({
+        message: `The order with ID ${id} must be in pending status to be updated.`,
+        status: HttpStatus.BAD_REQUEST,
+        error: true,
+      });
+
     await this.cacheService.removeByPrefix(
       `keyv:${updateOrderDto.parent_id}:orders:list`,
     );
@@ -238,5 +246,9 @@ export class OrdersService {
     } catch (error) {
       throw new RpcException(error.message);
     }
+  }
+
+  async updateStatusOrder(updateStatusDto: UpdateStatusDto) {
+    return await this.repository.updateStatus(updateStatusDto);
   }
 }

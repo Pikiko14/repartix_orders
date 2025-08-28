@@ -8,6 +8,7 @@ import { UpdateOrderDto } from '../dto/update-order.dto';
 import { Order, OrderDocument } from '../schemas/order.schema';
 import { IOrdersRepository } from 'src/commons/interfaces/respository.interface';
 import { PaginationResponseInterface } from 'src/commons/interfaces/response.interface';
+import { UpdateStatusDto } from './../dto/update-status.dto';
 
 @Injectable()
 export class OrdersRepository implements IOrdersRepository {
@@ -132,5 +133,19 @@ export class OrdersRepository implements IOrdersRepository {
         status: HttpStatus.BAD_REQUEST,
       });
     }
+  }
+
+  /**
+   * Update order status
+   * @param { UpdateStatusDto } updateStatusDto
+   */
+  public async updateStatus(
+    updateStatusDto: UpdateStatusDto,
+  ): Promise<void> {
+    await this.model.findOneAndUpdate(
+      { reference: updateStatusDto.order_reference, parent_id: updateStatusDto.parent_id },
+      { status: updateStatusDto.status },
+    );
+    return;
   }
 }

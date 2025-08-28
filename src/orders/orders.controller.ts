@@ -2,6 +2,7 @@ import { Controller } from '@nestjs/common';
 import { OrdersService } from './orders.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
+import { UpdateStatusDto } from './dto/update-status.dto';
 import { MessagePattern, Payload } from '@nestjs/microservices';
 import { QueryParamDto } from 'src/commons/dto/query-param.dto';
 import { FindAndDeleteOrderDto } from './dto/find-and-delete-order.dto';
@@ -33,5 +34,10 @@ export class OrdersController {
   @MessagePattern('remove-order')
   remove(@Payload() deleteDto: FindAndDeleteOrderDto) {
     return this.ordersService.remove(deleteDto);
+  }
+
+  @MessagePattern('update-status-order')
+  updateStatusOrder(@Payload() updateStatusDto: UpdateStatusDto) {
+    return this.ordersService.updateStatusOrder(updateStatusDto);
   }
 }
