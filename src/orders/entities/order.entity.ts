@@ -55,6 +55,7 @@ export class OrderEntity {
     full_name: string;
     vehicle_type?: string;
     license_plate?: string;
+    phone?: string;
   };
 
   cash_on_delivery?: boolean;

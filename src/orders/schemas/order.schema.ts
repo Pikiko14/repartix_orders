@@ -50,7 +50,8 @@ class Product {
 class Courier {
   @Prop({ required: true, index: true }) full_name: string;
   @Prop() vehicle_type?: string;
-  @Prop({ index: true }) license_plate?: string;
+  @Prop() license_plate?: string;
+  @Prop() phone?: string;
 }
 
 @Schema({ _id: false })

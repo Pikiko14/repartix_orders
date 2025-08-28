@@ -118,6 +118,10 @@ export class CourierDto {
   @IsOptional()
   @IsString()
   license_plate?: string;
+
+  @IsOptional()
+  @IsString()
+  phone?: string;
 }
 
 export class PaymentDto {
