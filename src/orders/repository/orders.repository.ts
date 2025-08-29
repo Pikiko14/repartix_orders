@@ -41,10 +41,10 @@ export class OrdersRepository implements IOrdersRepository {
 
   async update(
     id: string | number,
-    user: OrderEntity | UpdateOrderDto,
+    order: OrderEntity | UpdateOrderDto | OrderDocument,
   ): Promise<OrderEntity | null> {
     try {
-      return await this.model.findByIdAndUpdate(id, user, { new: true });
+      return await this.model.findByIdAndUpdate(id, order, { new: true });
     } catch (error) {
       throw new RpcException({
         message: error.message,

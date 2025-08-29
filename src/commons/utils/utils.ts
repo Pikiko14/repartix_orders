@@ -1,3 +1,6 @@
+import * as fs from 'fs';
+import * as path from 'path';
+import * as sharp from 'sharp';
 import { Injectable } from '@nestjs/common';
 
 @Injectable()
@@ -24,5 +27,28 @@ export class Utils {
       999,
     );
     return { startOfMonth, endOfMonth };
+  }
+
+  async processFile(file: any) {
+    const { filename, buffer } = file;
+
+    const fileBuffer = Buffer.from(buffer, 'base64');
+
+    // Carpeta destino (en la raíz del proyecto)
+    const uploadDir = path.join(process.cwd(), 'uploads');
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
+
+    // Guardar en disco
+    const basename = path.parse(filename).name;
+    const savePath = path.join(uploadDir, `${basename}.webp`);
+
+    // Convertir a WebP con sharp
+    await sharp(fileBuffer)
+      .webp({ quality: 50 })
+      .toFile(savePath);
+
+    return path;
   }
 }

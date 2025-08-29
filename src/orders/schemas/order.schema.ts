@@ -76,6 +76,15 @@ class Statuses {
   @Prop() description?: string;
 }
 
+// schema news
+@Schema({ _id: false })
+class News {
+  @Prop({ required: true }) type_news: string;
+  @Prop({ required: true }) description: string;
+  @Prop({ required: false }) file: string;
+  @Prop({ required: false }) resolve_answer: Date;
+}
+
 // schema de order
 @Schema({ timestamps: true })
 export class Order {
@@ -111,6 +120,7 @@ export class Order {
   @Prop({ type: Zone }) zone?: Zone;
   @Prop({ default: false }) print_guide?: boolean;
   @Prop({ type: [Statuses], default: [{ status: 'pending', date: Date.now() }] }) statuses: Statuses[];
+  @Prop({ type: [News], default: [] }) news: News[];
 }
 
 const OrderSchema = SchemaFactory.createForClass(Order);

@@ -1,6 +1,6 @@
 import { envs } from 'src/configuration';
 import { Utils } from 'src/commons/utils/utils';
-import { OrderEntity, StatusEnum } from './entities/order.entity';
+import { CreateNewsDto } from './dto/create-news.dto';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
 import { UpdateStatusDto } from './dto/update-status.dto';
@@ -8,6 +8,7 @@ import { CacheService } from 'src/commons/cache/cache.service';
 import { QueryParamDto } from 'src/commons/dto/query-param.dto';
 import { HttpStatus, Inject, Injectable } from '@nestjs/common';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
+import { OrderEntity, StatusEnum } from './entities/order.entity';
 import { OrdersRepository } from './repository/orders.repository';
 import { FindAndDeleteOrderDto } from './dto/find-and-delete-order.dto';
 
@@ -198,7 +199,8 @@ export class OrdersService {
     );
 
     try {
-      if (!updateOrderDto.print_guide) updateOrderDto.status = StatusEnum.pending; 
+      if (!updateOrderDto.print_guide)
+        updateOrderDto.status = StatusEnum.pending;
 
       order = await this.repository.update(id, updateOrderDto);
 
@@ -257,37 +259,83 @@ export class OrdersService {
   }
 
   async updateStatusOrder(updateStatusDto: UpdateStatusDto) {
-    let order = await this.repository.findOrderByReferenceAndUser(
-      updateStatusDto.order_reference,
-      updateStatusDto.parent_id
-    );
-    
-    if (!order)
-      throw new RpcException({
-        message: `Order with this reference: ${updateStatusDto.order_reference} not found`,
-        status: HttpStatus.NOT_FOUND,
-        error: true,
+    try {
+      let order = await this.repository.findOrderByReferenceAndUser(
+        updateStatusDto.order_reference,
+        updateStatusDto.parent_id,
+      );
+
+      if (!order)
+        throw new RpcException({
+          message: `Order with this reference: ${updateStatusDto.order_reference} not found`,
+          status: HttpStatus.NOT_FOUND,
+          error: true,
+        });
+
+      await this.cacheService.removeByPrefix(
+        `keyv:${updateStatusDto.parent_id}:orders:list`,
+      );
+
+      const status = {
+        status: updateStatusDto.status,
+        date: new Date(),
+      };
+
+      order.statuses.push(status);
+      order.status = updateStatusDto.status;
+      order.print_guide = updateStatusDto.status === 'pending' ? false : true;
+
+      order = await this.repository.updateStatus(order.id, order);
+
+      return {
+        success: true,
+        data: order,
+        message: 'Order status update success',
+      };
+    } catch (error) {
+      throw new RpcException(error.message);
+    }
+  }
+
+  async createNews(createNewsDto: CreateNewsDto) {
+    try {
+      const { file } = createNewsDto;
+      delete createNewsDto.file;
+
+      let order = await this.repository.find({
+        key: '_id',
+        value: createNewsDto.order_id,
       });
 
-    await this.cacheService.removeByPrefix(
-      `keyv:${updateStatusDto.parent_id}:orders:list`,
-    );
+      if (!order)
+        throw new RpcException({
+          message: `Order with this id: ${createNewsDto.order_id} not found`,
+          status: HttpStatus.NOT_FOUND,
+          error: true,
+        });
+        
+      const news = {
+        type_news: createNewsDto.type_news,
+        description: createNewsDto.description
+      }
 
-    const status = {
-      status: updateStatusDto.status,
-      date: new Date(),
-    }
 
-    order.statuses.push(status)
-    order.status = updateStatusDto.status;
-    order.print_guide = updateStatusDto.status === 'pending' ? false : true;
+      if (file) {
+        const path = await this.utils.processFile(file);
+        news['file'] = path;
+      }
 
-    order = await this.repository.updateStatus(order.id, order);
+      order.news.push(news);
 
-    return {
-      success: true,
-      data: order,
-      message: 'Order status update success',
+      order = await this.repository.update(order.id, order);
+
+      return {
+        success: true,
+        order,
+        message: 'News created successfully',
+      };
+    } catch (error) {
+      throw new RpcException(error.message);
     }
   }
 }

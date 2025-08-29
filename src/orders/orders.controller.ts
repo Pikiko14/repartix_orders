@@ -1,5 +1,6 @@
 import { Controller } from '@nestjs/common';
 import { OrdersService } from './orders.service';
+import { CreateNewsDto } from './dto/create-news.dto';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
 import { UpdateStatusDto } from './dto/update-status.dto';
@@ -39,5 +40,10 @@ export class OrdersController {
   @MessagePattern('update-status-order')
   updateStatusOrder(@Payload() updateStatusDto: UpdateStatusDto) {
     return this.ordersService.updateStatusOrder(updateStatusDto);
+  }
+
+  @MessagePattern('create-order-news')
+  createNews(@Payload() updateStatusDto: CreateNewsDto) {
+    return this.ordersService.createNews(updateStatusDto);
   }
 }

@@ -9,6 +9,9 @@ export enum StatusEnum {
 }
 
 export class OrderEntity {
+  id?: string;
+  _id?: string;
+
   date: Date;
 
   scheduled_date: Date;
@@ -90,5 +93,12 @@ export class OrderEntity {
     status: StatusEnum;
     date: Date;
     description: string;
+  }[];
+
+  news: {
+    type_news?: string;
+    description?: string;
+    file?: string;
+    resolve_answer?: string;
   }[];
 }
