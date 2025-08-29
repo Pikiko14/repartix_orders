@@ -11,8 +11,8 @@ export class CacheService {
    * @param key
    * @param payload
    */
-  async setItem(key: string, payload: any, ttl = 600000): Promise<void | boolean> {
-    this.logger.log(`Se ha guardado el item: ${key} en cache por 10min`);
+  async setItem(key: string, payload: any, ttl = 300000): Promise<void | boolean> {
+    this.logger.log(`Se ha guardado el item: ${key} en cache por 5min`);
     await this.cache.set(key, JSON.stringify(payload), ttl);
   }
 

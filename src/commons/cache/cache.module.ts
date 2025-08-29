@@ -10,7 +10,7 @@ import * as redisStore from 'cache-manager-ioredis';
       store: redisStore,
       host: envs.redis_host,
       port: envs.port,
-      ttl: 600, // segundos
+      ttl: 300, // segundos
     })
   ],
   providers: [CacheService],
