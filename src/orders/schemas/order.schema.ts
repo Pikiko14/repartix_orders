@@ -82,7 +82,8 @@ class News {
   @Prop({ required: true }) type_news: string;
   @Prop({ required: true }) description: string;
   @Prop({ required: false }) file: string;
-  @Prop({ required: false }) resolve_answer: Date;
+  @Prop({ required: false }) resolve_answer: string;
+  @Prop({ required: false, default: Date.now() }) date: Date;
 }
 
 // schema de order
