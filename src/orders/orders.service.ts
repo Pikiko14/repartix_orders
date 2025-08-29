@@ -257,6 +257,32 @@ export class OrdersService {
   }
 
   async updateStatusOrder(updateStatusDto: UpdateStatusDto) {
-    return await this.repository.updateStatus(updateStatusDto);
+    let order = await this.repository.findOrderByReferenceAndUser(
+      updateStatusDto.order_reference,
+      updateStatusDto.parent_id
+    );
+    
+    if (!order)
+      throw new RpcException({
+        message: `Order with this reference: ${updateStatusDto.order_reference} not found`,
+        status: HttpStatus.NOT_FOUND,
+        error: true,
+      });
+
+    const status = {
+      status: updateStatusDto.status,
+      date: new Date(),
+    }
+
+    order.statuses.push(status)
+    order.status = updateStatusDto.status;
+
+    order = await this.repository.updateStatus(order.id, order);
+
+    return {
+      success: true,
+      data: order,
+      message: 'Order status update success',
+    }
   }
 }

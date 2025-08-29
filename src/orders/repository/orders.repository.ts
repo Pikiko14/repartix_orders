@@ -137,16 +137,22 @@ export class OrdersRepository implements IOrdersRepository {
   }
 
   /**
+   * Get order by reference and user_id
+   * @param { string } reference
+   * @param { string } parent_id
+   */
+  async findOrderByReferenceAndUser(reference: string, parent_id: string): Promise<OrderDocument | void> {
+    return this.model.findOne({ reference, parent_id });
+  }
+
+  /**
    * Update order status
    * @param { UpdateStatusDto } updateStatusDto
    */
   public async updateStatus(
-    updateStatusDto: UpdateStatusDto,
-  ): Promise<void> {
-    await this.model.findOneAndUpdate(
-      { reference: updateStatusDto.order_reference, parent_id: updateStatusDto.parent_id },
-      { status: updateStatusDto.status },
-    );
-    return;
+    id: string,
+    order: OrderDocument,
+  ): Promise<OrderDocument | void> {
+    return await this.model.findByIdAndUpdate(id, order);
   }
 }

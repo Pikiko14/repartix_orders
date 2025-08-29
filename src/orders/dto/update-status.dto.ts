@@ -14,4 +14,8 @@ export class UpdateStatusDto {
   @IsEnum(StatusEnum)
   @IsOptional()
   status?: StatusEnum;
+
+  @IsString()
+  @IsOptional()
+  description?: string; 
 }
