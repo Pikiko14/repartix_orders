@@ -153,6 +153,6 @@ export class OrdersRepository implements IOrdersRepository {
     id: string,
     order: OrderDocument,
   ): Promise<OrderDocument | void> {
-    return await this.model.findByIdAndUpdate(id, order);
+    return await this.model.findByIdAndUpdate(id, order, { new: true });
   }
 }

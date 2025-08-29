@@ -1,6 +1,5 @@
-import { IsEnum, IsOptional, IsString } from 'class-validator';
 import { StatusEnum } from '../entities/order.entity';
-
+import { IsEnum, IsOptional, IsString } from 'class-validator';
 export class UpdateStatusDto {
   @IsString()
   order_reference: string;
@@ -17,5 +16,5 @@ export class UpdateStatusDto {
 
   @IsString()
   @IsOptional()
-  description?: string; 
+  description?: string;
 }

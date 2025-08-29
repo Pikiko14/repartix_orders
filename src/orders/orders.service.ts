@@ -269,6 +269,10 @@ export class OrdersService {
         error: true,
       });
 
+    await this.cacheService.removeByPrefix(
+      `keyv:${updateStatusDto.parent_id}:orders:list`,
+    );
+
     const status = {
       status: updateStatusDto.status,
       date: new Date(),
@@ -276,6 +280,7 @@ export class OrdersService {
 
     order.statuses.push(status)
     order.status = updateStatusDto.status;
+    order.print_guide = updateStatusDto.status === 'pending' ? false : true;
 
     order = await this.repository.updateStatus(order.id, order);
 
