@@ -5,7 +5,7 @@ export enum StatusEnum {
   cancelled = 'cancelled',
   returned = 'returned',
   guide_printed = 'guide-printed',
-  guide_news = 'guide-news'
+  guide_news = 'guide-news',
 }
 
 export class OrderEntity {
@@ -70,7 +70,7 @@ export class OrderEntity {
     methods: string;
     amount: number;
     date: Date;
-  }[]
+  }[];
 
   parent_id?: string;
 
@@ -85,4 +85,10 @@ export class OrderEntity {
     cod_zone?: string;
   };
   print_guide?: boolean;
+
+  statuses: {
+    status: StatusEnum;
+    date: Date;
+    description: string;
+  }[];
 }

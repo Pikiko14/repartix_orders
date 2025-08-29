@@ -10,6 +10,7 @@ import {
   IsBoolean,
 } from 'class-validator';
 import { Type } from 'class-transformer';
+import { StatusEnum } from '../entities/order.entity';
 
 export class CoordsDto {
   @IsNumber()
@@ -153,6 +154,28 @@ export class ZoneDto {
   cod_zone: string;
 }
 
+export class StatusesDto {
+  @IsNotEmpty()
+  @IsEnum(StatusEnum)
+  status:
+    | 'pending'
+    | 'in_progress'
+    | 'delivered'
+    | 'cancelled'
+    | 'returned'
+    | 'guide-printed'
+    | 'guide-news';
+
+  @IsOptional()
+  @IsDate()
+  @Type(() => Date)
+  date?: Date;
+
+  @IsOptional()
+  @IsString()
+  description?: string;
+}
+
 export class CreateOrderDto {
   @IsOptional()
   @IsDate()
@@ -251,4 +274,10 @@ export class CreateOrderDto {
   @IsOptional()
   @IsBoolean()
   print_guide?: boolean;
+
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => StatusesDto)
+  statuses?: StatusesDto[];
 }

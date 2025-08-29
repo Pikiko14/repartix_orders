@@ -68,6 +68,14 @@ class Zone {
   @Prop({ required: false }) cod_zone: string;
 }
 
+// schema statuses
+@Schema({ _id: false })
+class Statuses {
+  @Prop({ required: true, enum: StatusEnum, default: 'pending' }) status?: string;
+  @Prop({ default: Date.now() }) date: Date;
+  @Prop() description?: string;
+}
+
 // schema de order
 @Schema({ timestamps: true })
 export class Order {
@@ -102,6 +110,7 @@ export class Order {
   @Prop({ index: true }) city?: string;
   @Prop({ type: Zone }) zone?: Zone;
   @Prop({ default: false }) print_guide?: boolean;
+  @Prop({ type: [Statuses], default: [{ status: 'pending', date: Date.now() }] }) statuses: Statuses[];
 }
 
 const OrderSchema = SchemaFactory.createForClass(Order);
