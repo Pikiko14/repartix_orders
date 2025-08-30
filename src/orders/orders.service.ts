@@ -330,6 +330,10 @@ export class OrdersService {
 
       order = await this.repository.update(order.id, order);
 
+      await this.cacheService.removeByPrefix(
+        `keyv:${createNewsDto.parent_id}:orders:list`,
+      );
+
       return {
         success: true,
         order,
@@ -369,12 +373,16 @@ export class OrdersService {
 
       if (file) {
         const path = await this.utils.processFile(file);
-        payment['file'] = path;
+        payment['file'] = path || '';
       }
 
       order.payments.push(payment);
 
       order = await this.repository.update(order.id, order);
+
+      await this.cacheService.removeByPrefix(
+        `keyv:${createPaymentDto.parent_id}:orders:list`,
+      );
 
       return {
         success: true,

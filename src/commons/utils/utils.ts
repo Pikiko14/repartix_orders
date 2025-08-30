@@ -1,10 +1,17 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as sharp from 'sharp';
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
+import { CloudinaryService } from '../cloudinary/cloudinary.service';
 
 @Injectable()
 export class Utils {
+  logger = new Logger(Utils.name);
+
+  constructor(
+    @Inject() private readonly cloudinary: CloudinaryService,
+  ) {}
+
   getMonthRange(date: Date) {
     // Inicio de mes
     const startOfMonth = new Date(
@@ -49,6 +56,23 @@ export class Utils {
       .webp({ quality: 50 })
       .toFile(savePath);
 
-    return path;
+    try {
+      const cloudinaryResponse = await this.cloudinary.uploadFilePath(
+        savePath,
+         `payments/${new Date().getMonth() + 1}-${new Date().getFullYear()}`,
+         basename,
+      );
+
+      if (cloudinaryResponse && cloudinaryResponse?.secure_url) {
+        
+        return cloudinaryResponse?.secure_url;
+      }
+
+      await fs.promises.unlink(savePath);
+
+      return null;
+    } catch (error) {
+      this.logger.error(error);
+    };
   }
 }

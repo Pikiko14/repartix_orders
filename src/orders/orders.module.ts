@@ -7,6 +7,7 @@ import { NatsModule } from 'src/transports/nats.module';
 import { OrderSchema, Order } from './schemas/order.schema';
 import { OrdersRepository } from './repository/orders.repository';
 import { CacheServiceModule } from 'src/commons/cache/cache.module';
+import { CloudinaryModule } from 'src/commons/cloudinary/cloudinary.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { CacheServiceModule } from 'src/commons/cache/cache.module';
         schema: OrderSchema,
       }
     ]),
+    CloudinaryModule,
     CacheServiceModule,
   ],
   controllers: [OrdersController],

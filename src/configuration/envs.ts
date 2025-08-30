@@ -11,6 +11,10 @@ interface EnvVars {
   NATH_SERVICE: string;
   REDIS_HOST: string;
   REDIS_PORT: number;
+  CLOUDINARY_CLOUD_NAME: string;
+  CLOUDINARY_API_KEY: string;
+  CLOUDINARY_API_SECRET: string;
+
 }
 
 const envsSchema = joi.object({
@@ -23,6 +27,9 @@ const envsSchema = joi.object({
   NATH_SERVICE: joi.string().required(),
   REDIS_HOST: joi.string().required(),
   REDIS_PORT: joi.number().required(),
+  CLOUDINARY_CLOUD_NAME: joi.string().required(),
+  CLOUDINARY_API_KEY: joi.string().required(),
+  CLOUDINARY_API_SECRET: joi.string().required(),
 })
 .unknown(true);
 
@@ -48,4 +55,7 @@ export const envs = {
   nats_service_name: envVars.NATH_SERVICE,
   redis_host: envVars.REDIS_HOST,
   redis_port: envVars.REDIS_PORT,
+  cloudinary_cloud_name: envVars.CLOUDINARY_CLOUD_NAME,
+  cloudinary_api_key: envVars.CLOUDINARY_API_KEY,
+  cloudinary_api_secret: envVars.CLOUDINARY_API_SECRET,
 }
