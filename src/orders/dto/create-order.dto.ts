@@ -10,7 +10,17 @@ import {
   IsBoolean,
 } from 'class-validator';
 import { Type } from 'class-transformer';
-import { StatusEnum } from '../entities/order.entity';
+import { CreateNewsDto } from './create-news.dto';
+
+export enum StatusEnum {
+  pending = 'pending',
+  in_progress = 'in_progress',
+  delivered = 'delivered',
+  cancelled = 'cancelled',
+  returned = 'returned',
+  guide_printed = 'guide-printed',
+  guide_news = 'guide-news',
+}
 
 export class CoordsDto {
   @IsNumber()
@@ -138,6 +148,9 @@ export class PaymentDto {
   @IsOptional()
   @Type(() => Date)
   date: Date;
+
+  @IsOptional()
+  file?: string;
 }
 
 export class ZoneDto {
@@ -280,4 +293,11 @@ export class CreateOrderDto {
   @ValidateNested({ each: true })
   @Type(() => StatusesDto)
   statuses?: StatusesDto[];
+
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => CreateNewsDto)
+  news?: CreateNewsDto[];
+
 }

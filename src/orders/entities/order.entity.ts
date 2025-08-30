@@ -73,6 +73,7 @@ export class OrderEntity {
     methods: string;
     amount: number;
     date: Date;
+    file?: string;
   }[];
 
   parent_id?: string;
