@@ -57,7 +57,7 @@ class Courier {
 @Schema({ _id: false })
 class Payment {
   @Prop({ required: true, index: true }) methods: string;
-  @Prop({ required: true }) amount: number;
+  @Prop({ required: true }) amount: string;
   @Prop({ required: false }) date: Date;
   @Prop({ required: false }) file?: string;
 }

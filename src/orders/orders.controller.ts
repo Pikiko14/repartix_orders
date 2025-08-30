@@ -4,6 +4,7 @@ import { CreateNewsDto } from './dto/create-news.dto';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
 import { UpdateStatusDto } from './dto/update-status.dto';
+import { CreatePaymentDto } from './dto/create-payment.dto';
 import { MessagePattern, Payload } from '@nestjs/microservices';
 import { QueryParamDto } from 'src/commons/dto/query-param.dto';
 import { FindAndDeleteOrderDto } from './dto/find-and-delete-order.dto';
@@ -45,5 +46,10 @@ export class OrdersController {
   @MessagePattern('create-order-news')
   createNews(@Payload() updateStatusDto: CreateNewsDto) {
     return this.ordersService.createNews(updateStatusDto);
+  }
+
+  @MessagePattern('create-order-payment')
+  createPayment(@Payload() createPaymentDto: CreatePaymentDto) {
+    return this.ordersService.createPayment(createPaymentDto);
   }
 }

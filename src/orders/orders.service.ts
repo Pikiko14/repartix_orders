@@ -4,6 +4,7 @@ import { CreateNewsDto } from './dto/create-news.dto';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
 import { UpdateStatusDto } from './dto/update-status.dto';
+import { CreatePaymentDto } from './dto/create-payment.dto';
 import { CacheService } from 'src/commons/cache/cache.service';
 import { QueryParamDto } from 'src/commons/dto/query-param.dto';
 import { HttpStatus, Inject, Injectable } from '@nestjs/common';
@@ -333,6 +334,52 @@ export class OrdersService {
         success: true,
         order,
         message: 'News created successfully',
+      };
+    } catch (error) {
+      throw new RpcException(error.message);
+    }
+  }
+
+  async createPayment(createPaymentDto: CreatePaymentDto) {
+    try {
+      const { file } = createPaymentDto;
+      delete createPaymentDto.file;
+
+      let order = await this.repository.find({
+        key: '_id',
+        value: createPaymentDto.order_id,
+      });
+
+      delete createPaymentDto.order_id;
+
+
+      if (!order)
+        throw new RpcException({
+          message: `Order with this id: ${createPaymentDto.order_id} not found`,
+          status: HttpStatus.NOT_FOUND,
+          error: true,
+        });
+        
+      const payment = {
+        methods: createPaymentDto.methods,
+        amount: createPaymentDto.amount,
+        date: new Date(),
+      }
+
+
+      if (file) {
+        const path = await this.utils.processFile(file);
+        payment['file'] = path;
+      }
+
+      order.payments.push(payment);
+
+      order = await this.repository.update(order.id, order);
+
+      return {
+        success: true,
+        order,
+        message: 'Payment created successfully',
       };
     } catch (error) {
       throw new RpcException(error.message);

@@ -71,7 +71,7 @@ export class OrderEntity {
 
   payments: {
     methods: string;
-    amount: number;
+    amount: string;
     date: Date;
     file?: string;
   }[];
