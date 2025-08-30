@@ -16,7 +16,7 @@ export class OrderEntity {
 
   scheduled_date: Date;
 
-  status: StatusEnum;
+  status: string;
 
   client: {
     name: string;
@@ -91,7 +91,7 @@ export class OrderEntity {
   print_guide?: boolean;
 
   statuses: {
-    status: StatusEnum;
+    status: string;
     date: Date;
     description: string;
   }[];

@@ -169,15 +169,8 @@ export class ZoneDto {
 
 export class StatusesDto {
   @IsNotEmpty()
-  @IsEnum(StatusEnum)
-  status:
-    | 'pending'
-    | 'in_progress'
-    | 'delivered'
-    | 'cancelled'
-    | 'returned'
-    | 'guide-printed'
-    | 'guide-news';
+  @IsString()
+  status: string;
 
   @IsOptional()
   @IsDate()
@@ -201,23 +194,8 @@ export class CreateOrderDto {
   scheduled_date: Date;
 
   @IsOptional()
-  @IsEnum([
-    'pending',
-    'in_progress',
-    'delivered',
-    'cancelled',
-    'returned',
-    'guide-printed',
-    'guide-news',
-  ])
-  status:
-    | 'pending'
-    | 'in_progress'
-    | 'delivered'
-    | 'cancelled'
-    | 'returned'
-    | 'guide-printed'
-    | 'guide-news';
+  @IsString()
+  status: string;
 
   @IsNotEmpty()
   @ValidateNested()

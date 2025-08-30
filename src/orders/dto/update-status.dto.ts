@@ -1,4 +1,3 @@
-import { StatusEnum } from '../entities/order.entity';
 import { IsEnum, IsOptional, IsString } from 'class-validator';
 export class UpdateStatusDto {
   @IsString()
@@ -10,9 +9,9 @@ export class UpdateStatusDto {
   @IsString()
   parent_id: string;
 
-  @IsEnum(StatusEnum)
+  @IsString()
   @IsOptional()
-  status?: StatusEnum;
+  status?: string;
 
   @IsString()
   @IsOptional()

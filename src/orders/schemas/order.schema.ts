@@ -1,6 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
-import { StatusEnum } from '../entities/order.entity';
 
 export type OrderDocument = Order & Document;
 
@@ -72,7 +71,7 @@ class Zone {
 // schema statuses
 @Schema({ _id: false })
 class Statuses {
-  @Prop({ required: true, enum: StatusEnum, default: 'pending' }) status?: string;
+  @Prop({ required: true, default: 'pending' }) status?: string;
   @Prop({ default: Date.now() }) date: Date;
   @Prop() description?: string;
 }
@@ -95,7 +94,6 @@ export class Order {
 
   @Prop({
     required: true,
-    enum: StatusEnum,
     default: 'pending',
   })
   status: string;
