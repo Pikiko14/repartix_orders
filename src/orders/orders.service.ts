@@ -11,6 +11,7 @@ import { HttpStatus, Inject, Injectable } from '@nestjs/common';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { OrderEntity, StatusEnum } from './entities/order.entity';
 import { OrdersRepository } from './repository/orders.repository';
+import { LoadDashboardDataDto } from './dto/load-dashboard-data.dto';
 import { FindAndDeleteOrderDto } from './dto/find-and-delete-order.dto';
 
 @Injectable()
@@ -57,7 +58,6 @@ export class OrdersService {
   }
 
   async findAll(queryParams: QueryParamDto) {
-
     const cacheKey = `${queryParams.parent_id}:orders:list:${JSON.stringify(queryParams)}`;
     let orders = await this.cacheService.getItem(cacheKey);
     if (orders) {
@@ -401,4 +401,72 @@ export class OrdersService {
       throw new RpcException(error.message);
     }
   }
+
+  async loadDashboardData(dashboardDataDto: LoadDashboardDataDto) {
+  try {
+    // base de condiciones
+    const baseConditions: any[] = [{ parent_id: dashboardDataDto.parent_id }];
+
+    // fechas
+    const { startOfMonth, endOfMonth } = this.utils.getMonthRange(new Date());
+    let startOfDay = new Date(startOfMonth.setHours(0, 0, 0, 0));
+    let endOfDay = new Date(endOfMonth.setHours(23, 59, 59, 999));
+
+    if (dashboardDataDto.from && dashboardDataDto.to) {
+      const from = new Date(dashboardDataDto.from);
+      const to = new Date(dashboardDataDto.to);
+      startOfDay = new Date(from.setHours(0, 0, 0, 0));
+      endOfDay = new Date(to.setHours(23, 59, 59, 999));
+    }
+
+    baseConditions.push({ date: { $gte: startOfDay, $lte: endOfDay } });
+
+    if (dashboardDataDto.type_user === 'sender') {
+      baseConditions.push({
+        'sender.sender_id': dashboardDataDto.main_user_id,
+      });
+    }
+
+    // ---- QUERY 0: clients orders ----
+    const clientsOrdersQuery = { $and: [...baseConditions] };
+    const orders = await this.repository.findOrdersClients(clientsOrdersQuery);
+
+    // ---- QUERY 1: total orders ----
+    const totalOrdersQuery = { $and: [...baseConditions] };
+    const totalOrders = await this.repository.countModelByQuery(totalOrdersQuery);
+
+    // ---- QUERY 2: delivered ----
+    const deliveredQuery = { $and: [...baseConditions, { status: StatusEnum.delivered }] };
+    const delivered = await this.repository.countModelByQuery(deliveredQuery);
+
+    // ---- QUERY 3: pending ----
+    const pendingQuery = { $and: [...baseConditions, { status: StatusEnum.pending }] };
+    const pending = await this.repository.countModelByQuery(pendingQuery);
+
+    // ---- QUERY 4: cancelled ----
+    const cancelledQuery = { $and: [...baseConditions, { status: StatusEnum.cancelled }] };
+    const cancelled = await this.repository.countModelByQuery(cancelledQuery);
+
+    // ---- QUERY 4: cancelled ----
+    const newsQuery = { $and: [...baseConditions, { status: StatusEnum.guide_news }] };
+    const news = await this.repository.countModelByQuery(newsQuery);
+
+    return {
+      success: true,
+      data: {
+        totalOrders,
+        delivered,
+        pending,
+        cancelled,
+        news,
+        orders,
+      },
+      message: 'Dashboard data',
+    };
+
+  } catch (error) {
+    throw new RpcException(error.message);
+  }
+}
+
 }

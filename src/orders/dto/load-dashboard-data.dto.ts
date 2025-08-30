@@ -12,4 +12,10 @@ export class LoadDashboardDataDto {
 
   @IsOptional()
   parent_id?: string;
+
+  @IsOptional()
+  type_user?: string;
+
+  @IsOptional()
+  main_user_id?: string;
 }

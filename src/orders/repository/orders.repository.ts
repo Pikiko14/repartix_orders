@@ -8,7 +8,6 @@ import { UpdateOrderDto } from '../dto/update-order.dto';
 import { Order, OrderDocument } from '../schemas/order.schema';
 import { IOrdersRepository } from 'src/commons/interfaces/respository.interface';
 import { PaginationResponseInterface } from 'src/commons/interfaces/response.interface';
-import { UpdateStatusDto } from './../dto/update-status.dto';
 
 @Injectable()
 export class OrdersRepository implements IOrdersRepository {
@@ -141,7 +140,10 @@ export class OrdersRepository implements IOrdersRepository {
    * @param { string } reference
    * @param { string } parent_id
    */
-  async findOrderByReferenceAndUser(reference: string, parent_id: string): Promise<OrderDocument | void> {
+  async findOrderByReferenceAndUser(
+    reference: string,
+    parent_id: string,
+  ): Promise<OrderDocument | void> {
     return this.model.findOne({ reference, parent_id });
   }
 
@@ -154,5 +156,30 @@ export class OrdersRepository implements IOrdersRepository {
     order: OrderDocument,
   ): Promise<OrderDocument | void> {
     return await this.model.findByIdAndUpdate(id, order, { new: true });
+  }
+
+  /**
+   * count by query
+   * @param { Record<string, any> } query
+   */
+  public async countModelByQuery(query: Record<string, any>): Promise<number> {
+    return await this.model.countDocuments(query);
+  }
+
+  /**
+   * count by query
+   * @param { Record<string, any> } query
+   */
+  public async findOrdersClients(query: Record<string, any>): Promise<any[]> {
+    const clients = await this.model.find(query, {
+      'client.name': 1,
+      'client.last_name': 1,
+      'client.address': 1,
+      'client.coords': 1,
+      _id: 0,
+      reference: 1,
+      status: 1,
+    });
+    return clients;
   }
 }

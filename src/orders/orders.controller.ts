@@ -7,6 +7,7 @@ import { UpdateStatusDto } from './dto/update-status.dto';
 import { CreatePaymentDto } from './dto/create-payment.dto';
 import { MessagePattern, Payload } from '@nestjs/microservices';
 import { QueryParamDto } from 'src/commons/dto/query-param.dto';
+import { LoadDashboardDataDto } from './dto/load-dashboard-data.dto';
 import { FindAndDeleteOrderDto } from './dto/find-and-delete-order.dto';
 
 @Controller()
@@ -51,5 +52,10 @@ export class OrdersController {
   @MessagePattern('create-order-payment')
   createPayment(@Payload() createPaymentDto: CreatePaymentDto) {
     return this.ordersService.createPayment(createPaymentDto);
+  }
+
+  @MessagePattern('load-dashboard-data')
+  loadDashboardData(@Payload() dashboardDataDto: LoadDashboardDataDto) {
+    return this.ordersService.loadDashboardData(dashboardDataDto);
   }
 }
