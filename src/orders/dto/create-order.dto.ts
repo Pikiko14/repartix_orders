@@ -87,6 +87,10 @@ export class SenderDto {
   @ValidateNested()
   @Type(() => SenderAddressDto)
   address: SenderAddressDto;
+
+  @IsNotEmpty()
+  @IsString()
+  sender_id: string;
 }
 
 export class ProductDto {
@@ -277,5 +281,4 @@ export class CreateOrderDto {
   @ValidateNested({ each: true })
   @Type(() => CreateNewsDto)
   news?: CreateNewsDto[];
-
 }

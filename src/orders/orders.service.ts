@@ -57,6 +57,7 @@ export class OrdersService {
   }
 
   async findAll(queryParams: QueryParamDto) {
+
     const cacheKey = `${queryParams.parent_id}:orders:list:${JSON.stringify(queryParams)}`;
     let orders = await this.cacheService.getItem(cacheKey);
     if (orders) {
@@ -109,6 +110,13 @@ export class OrdersService {
         for (const key of Object.keys(filterObj)) {
           andConditions.push({ [key]: filterObj[key] });
         }
+      }
+
+      // validamos si el usuario que solicita es remitente
+      if (queryParams.type_user === 'sender') {
+        andConditions.push({
+          'sender.sender_id': queryParams.main_user_id,
+        });
       }
 
       // query final

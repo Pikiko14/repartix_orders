@@ -28,6 +28,11 @@ export class QueryParamDto {
   to?: Date;
 
   @IsOptional()
-  @IsString()
   filters?: string;
+
+  @IsOptional()
+  main_user_id?: string;
+
+  @IsOptional()
+  type_user?: string;
 }

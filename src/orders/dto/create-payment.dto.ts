@@ -19,4 +19,8 @@ export class CreatePaymentDto {
   @IsOptional()
   @IsString()
   order_id?: string;
+
+  @IsString()
+  @IsOptional()
+  date?: string;
 }

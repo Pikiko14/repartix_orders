@@ -34,6 +34,7 @@ export class OrderEntity {
   sender: {
     brand_name: string;
     brand_phone?: string;
+    sender_id?: string;
     address: {
       address: string;
       complement: string;

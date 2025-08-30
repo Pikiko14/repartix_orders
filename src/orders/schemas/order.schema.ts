@@ -32,6 +32,7 @@ class Sender {
   @Prop({ required: true, index: true }) brand_name: string;
   @Prop({ index: true }) brand_phone?: string;
   @Prop({ required: true }) address: SenderAddress;
+  @Prop({ required: true }) sender_id: string;
 }
 
 @Schema({ _id: false })
