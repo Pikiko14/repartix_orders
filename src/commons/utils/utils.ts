@@ -68,7 +68,9 @@ export class Utils {
         return cloudinaryResponse?.secure_url;
       }
 
-      await fs.promises.unlink(savePath);
+      setTimeout(() => {
+        fs.unlinkSync(savePath);
+      }, 1000);
 
       return null;
     } catch (error) {
