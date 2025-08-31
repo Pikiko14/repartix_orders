@@ -322,12 +322,11 @@ export class OrdersService {
           status: HttpStatus.NOT_FOUND,
           error: true,
         });
-        
+
       const news = {
         type_news: createNewsDto.type_news,
-        description: createNewsDto.description
-      }
-
+        description: createNewsDto.description,
+      };
 
       if (file) {
         const path = await this.utils.processFile(file);
@@ -364,20 +363,18 @@ export class OrdersService {
 
       delete createPaymentDto.order_id;
 
-
       if (!order)
         throw new RpcException({
           message: `Order with this id: ${createPaymentDto.order_id} not found`,
           status: HttpStatus.NOT_FOUND,
           error: true,
         });
-        
+
       const payment = {
         methods: createPaymentDto.methods,
         amount: createPaymentDto.amount,
         date: new Date(),
-      }
-
+      };
 
       if (file) {
         const path = await this.utils.processFile(file);
@@ -403,70 +400,93 @@ export class OrdersService {
   }
 
   async loadDashboardData(dashboardDataDto: LoadDashboardDataDto) {
-  try {
-    // base de condiciones
-    const baseConditions: any[] = [{ parent_id: dashboardDataDto.parent_id }];
+    try {
+      const cacheKey = `${dashboardDataDto.parent_id}:orders:list:dashboard:${JSON.stringify(dashboardDataDto)}`;
 
-    // fechas
-    const { startOfMonth, endOfMonth } = this.utils.getMonthRange(new Date());
-    let startOfDay = new Date(startOfMonth.setHours(0, 0, 0, 0));
-    let endOfDay = new Date(endOfMonth.setHours(23, 59, 59, 999));
+      let data = await this.cacheService.getItem(cacheKey);
+      if (data) {
+        return {
+          success: true,
+          data,
+          message: 'Dashboard data (from cache)',
+        };
+      }
 
-    if (dashboardDataDto.from && dashboardDataDto.to) {
-      const from = new Date(dashboardDataDto.from);
-      const to = new Date(dashboardDataDto.to);
-      startOfDay = new Date(from.setHours(0, 0, 0, 0));
-      endOfDay = new Date(to.setHours(23, 59, 59, 999));
-    }
+      // base de condiciones
+      const baseConditions: any[] = [{ parent_id: dashboardDataDto.parent_id }];
 
-    baseConditions.push({ date: { $gte: startOfDay, $lte: endOfDay } });
+      // fechas
+      const { startOfMonth, endOfMonth } = this.utils.getMonthRange(new Date());
+      let startOfDay = new Date(startOfMonth.setHours(0, 0, 0, 0));
+      let endOfDay = new Date(endOfMonth.setHours(23, 59, 59, 999));
 
-    if (dashboardDataDto.type_user === 'sender') {
-      baseConditions.push({
-        'sender.sender_id': dashboardDataDto.main_user_id,
-      });
-    }
+      if (dashboardDataDto.from && dashboardDataDto.to) {
+        const from = new Date(dashboardDataDto.from);
+        const to = new Date(dashboardDataDto.to);
+        startOfDay = new Date(from.setHours(0, 0, 0, 0));
+        endOfDay = new Date(to.setHours(23, 59, 59, 999));
+      }
 
-    // ---- QUERY 0: clients orders ----
-    const clientsOrdersQuery = { $and: [...baseConditions] };
-    const orders = await this.repository.findOrdersClients(clientsOrdersQuery);
+      baseConditions.push({ date: { $gte: startOfDay, $lte: endOfDay } });
 
-    // ---- QUERY 1: total orders ----
-    const totalOrdersQuery = { $and: [...baseConditions] };
-    const totalOrders = await this.repository.countModelByQuery(totalOrdersQuery);
+      if (dashboardDataDto.type_user === 'sender') {
+        baseConditions.push({
+          'sender.sender_id': dashboardDataDto.main_user_id,
+        });
+      }
 
-    // ---- QUERY 2: delivered ----
-    const deliveredQuery = { $and: [...baseConditions, { status: StatusEnum.delivered }] };
-    const delivered = await this.repository.countModelByQuery(deliveredQuery);
+      // ---- QUERY 0: clients orders ----
+      const clientsOrdersQuery = { $and: [...baseConditions] };
+      const orders =
+        await this.repository.findOrdersClients(clientsOrdersQuery);
 
-    // ---- QUERY 3: pending ----
-    const pendingQuery = { $and: [...baseConditions, { status: StatusEnum.pending }] };
-    const pending = await this.repository.countModelByQuery(pendingQuery);
+      // ---- QUERY 1: total orders ----
+      const totalOrdersQuery = { $and: [...baseConditions] };
+      const totalOrders =
+        await this.repository.countModelByQuery(totalOrdersQuery);
 
-    // ---- QUERY 4: cancelled ----
-    const cancelledQuery = { $and: [...baseConditions, { status: StatusEnum.cancelled }] };
-    const cancelled = await this.repository.countModelByQuery(cancelledQuery);
+      // ---- QUERY 2: delivered ----
+      const deliveredQuery = {
+        $and: [...baseConditions, { status: StatusEnum.delivered }],
+      };
+      const delivered = await this.repository.countModelByQuery(deliveredQuery);
 
-    // ---- QUERY 4: cancelled ----
-    const newsQuery = { $and: [...baseConditions, { status: StatusEnum.guide_news }] };
-    const news = await this.repository.countModelByQuery(newsQuery);
+      // ---- QUERY 3: pending ----
+      const pendingQuery = {
+        $and: [...baseConditions, { status: StatusEnum.pending }],
+      };
+      const pending = await this.repository.countModelByQuery(pendingQuery);
 
-    return {
-      success: true,
-      data: {
+      // ---- QUERY 4: cancelled ----
+      const cancelledQuery = {
+        $and: [...baseConditions, { status: StatusEnum.cancelled }],
+      };
+      const cancelled = await this.repository.countModelByQuery(cancelledQuery);
+
+      // ---- QUERY 4: cancelled ----
+      const newsQuery = {
+        $and: [...baseConditions, { status: StatusEnum.guide_news }],
+      };
+      const news = await this.repository.countModelByQuery(newsQuery);
+
+      data = {
         totalOrders,
         delivered,
         pending,
         cancelled,
         news,
         orders,
-      },
-      message: 'Dashboard data',
-    };
+      };
 
-  } catch (error) {
-    throw new RpcException(error.message);
+      await this.cacheService.setItem(cacheKey, data);
+
+      return {
+        success: true,
+        data,
+        message: 'Dashboard data',
+      };
+    } catch (error) {
+      throw new RpcException(error.message);
+    }
   }
-}
-
 }
