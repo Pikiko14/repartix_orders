@@ -176,7 +176,7 @@ export class OrdersRepository implements IOrdersRepository {
       'client.last_name': 1,
       'client.address': 1,
       'client.coords': 1,
-      _id: 0,
+      _id: 1,
       reference: 1,
       status: 1,
     });
