@@ -122,6 +122,7 @@ export class Order {
   @Prop({ default: false }) print_guide?: boolean;
   @Prop({ type: [Statuses], default: [{ status: 'pending', date: Date.now() }] }) statuses: Statuses[];
   @Prop({ type: [News], default: [] }) news: News[];
+  @Prop({ default: 0, required: false }) discount?: number;
 }
 
 const OrderSchema = SchemaFactory.createForClass(Order);

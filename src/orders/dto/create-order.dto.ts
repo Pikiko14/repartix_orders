@@ -281,4 +281,9 @@ export class CreateOrderDto {
   @ValidateNested({ each: true })
   @Type(() => CreateNewsDto)
   news?: CreateNewsDto[];
+
+  @IsOptional()
+  @IsNumber()
+  @Type(() => Number)
+  discount?: number;
 }

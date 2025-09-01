@@ -103,4 +103,6 @@ export class OrderEntity {
     file?: string;
     resolve_answer?: string;
   }[];
+
+  discount?: number;
 }
