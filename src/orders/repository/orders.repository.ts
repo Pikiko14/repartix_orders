@@ -182,4 +182,12 @@ export class OrdersRepository implements IOrdersRepository {
     });
     return clients;
   }
+
+  /**
+   * get order by array ids
+   * @param { string[] } ids
+   */
+  public async findOrdersByArrayIds(ids: string[]): Promise<OrderDocument[]> {
+    return await this.model.find({ _id: { $in: ids } });
+  }
 }

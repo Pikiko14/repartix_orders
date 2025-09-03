@@ -489,4 +489,16 @@ export class OrdersService {
       throw new RpcException(error.message);
     }
   }
+
+  async getOrderByIdArray (ids: string[]) {
+    try {
+      return await this.repository.findOrdersByArrayIds(ids);
+    } catch (error) {
+      throw new RpcException({
+        message: error.message,
+        status: HttpStatus.BAD_REQUEST,
+        error: true,
+      });
+    }
+  }
 }

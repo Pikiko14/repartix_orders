@@ -58,4 +58,9 @@ export class OrdersController {
   loadDashboardData(@Payload() dashboardDataDto: LoadDashboardDataDto) {
     return this.ordersService.loadDashboardData(dashboardDataDto);
   }
+
+  @MessagePattern('get-orders-by-id-array')
+  getOrderByIdArray(@Payload() ids: string[]) {
+    return this.ordersService.getOrderByIdArray(ids);
+  }
 }
