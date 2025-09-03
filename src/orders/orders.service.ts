@@ -294,8 +294,6 @@ export class OrdersService {
       order.status = updateStatusDto.status;
       order.print_guide = updateStatusDto.status === 'pending' ? false : true;
 
-      order = await this.repository.updateStatus(order.id, order);
-
       if (updateStatusDto.status === 'delivered') {
         this.client.emit(
           'update-shipping-list-order',
@@ -303,9 +301,12 @@ export class OrdersService {
             status: updateStatusDto.status,
             reference: updateStatusDto.order_reference,
             parent_id: updateStatusDto?.parent_id,
+            order_id: order.id,
           }
         );
       }
+
+      order = await this.repository.updateStatus(order.id, order);
 
       return {
         success: true,
