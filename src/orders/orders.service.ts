@@ -296,6 +296,17 @@ export class OrdersService {
 
       order = await this.repository.updateStatus(order.id, order);
 
+      if (updateStatusDto.status === 'delivered') {
+        this.client.emit(
+          'update-shipping-list-order',
+          {
+            status: updateStatusDto.status,
+            reference: updateStatusDto.order_reference,
+            parent_id: updateStatusDto?.parent_id,
+          }
+        );
+      }
+
       return {
         success: true,
         data: order,
