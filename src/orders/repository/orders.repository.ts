@@ -98,6 +98,7 @@ export class OrdersRepository implements IOrdersRepository {
       const users = await this.model
         .find(query)
         .select(fields.length > 0 ? fields.join(' ') : '')
+        .sort({ reference: -1 })
         .skip(skip)
         .limit(perPage);
 

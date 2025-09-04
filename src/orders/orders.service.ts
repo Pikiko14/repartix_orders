@@ -100,9 +100,8 @@ export class OrdersService {
         const to = new Date(queryParams.to);
         startOfDay = new Date(from.setHours(0, 0, 0, 0));
         endOfDay = new Date(to.setHours(23, 59, 59, 999));
+        andConditions.push({ createdAt: { $gte: startOfDay, $lte: endOfDay } });
       }
-
-      andConditions.push({ date: { $gte: startOfDay, $lte: endOfDay } });
 
       // filtros adicionales
       if (queryParams.filters) {
@@ -439,7 +438,7 @@ export class OrdersService {
         endOfDay = new Date(to.setHours(23, 59, 59, 999));
       }
 
-      baseConditions.push({ date: { $gte: startOfDay, $lte: endOfDay } });
+      baseConditions.push({ createdAt: { $gte: startOfDay, $lte: endOfDay } });
 
       if (dashboardDataDto.type_user === 'sender') {
         baseConditions.push({
