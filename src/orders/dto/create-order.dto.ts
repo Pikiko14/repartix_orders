@@ -286,4 +286,7 @@ export class CreateOrderDto {
   @IsNumber()
   @Type(() => Number)
   discount?: number;
+
+  @IsOptional()
+  user_request_id: string;
 }
