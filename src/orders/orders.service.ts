@@ -548,6 +548,16 @@ export class OrdersService {
 
   async diaryReport(queryReportDto: QueryReportDto) {
     try {
+      const cacheKey = `${queryReportDto.parent_id}:orders:list:report-diary:${JSON.stringify(queryReportDto)}`;
+      let dataReport = await this.cacheService.getItem(cacheKey);
+      if (dataReport) {
+        return {
+          success: true,
+          data: dataReport,
+          message: 'Diary report (from cache)',
+        };
+      } 
+
       // construimos un $and global
       const andConditions: any[] = [{ parent_id: queryReportDto.parent_id }];
 
@@ -556,32 +566,46 @@ export class OrdersService {
         const date = new Date(queryReportDto.date);
         const startOfDay = new Date(date.setHours(0, 0, 0, 0));
         const endOfDay = new Date(date.setHours(23, 59, 59, 999));
-         andConditions.push({ createdAt: { $gte: startOfDay, $lte: endOfDay } });
+        andConditions.push({ createdAt: { $gte: startOfDay, $lte: endOfDay } });
       }
 
       // query final
       const query: Record<string, any> = { $and: andConditions };
 
       const orders = await this.repository.diaryReport(query);
-      const delivared = orders.filter((el) => el.status === StatusEnum.delivered).length;
-      const printed = orders.filter((el) => el.status === StatusEnum.guide_printed).length;
-      const pending = orders.filter((el) => el.status === StatusEnum.pending).length;
-      const cancelled = orders.filter((el) => el.status === StatusEnum.cancelled).length;
-      const news = orders.filter((el) => el.status === StatusEnum.guide_news).length;
 
+      // filter statuses
+      const delivared = orders.filter(
+        (el) => el.status === StatusEnum.delivered,
+      ).length;
+      const printed = orders.filter(
+        (el) => el.status === StatusEnum.guide_printed,
+      ).length;
+      const pending = orders.filter(
+        (el) => el.status === StatusEnum.pending,
+      ).length;
+      const cancelled = orders.filter(
+        (el) => el.status === StatusEnum.cancelled,
+      ).length;
+      const news = orders.filter(
+        (el) => el.status === StatusEnum.guide_news,
+      ).length;
 
+      // set in cache
+      dataReport = {
+        orders,
+        totalOrders: orders.length,
+        delivared,
+        printed,
+        pending,
+        cancelled,
+        news,
+      };
+      await this.cacheService.setItem(cacheKey, dataReport);
 
       return {
         success: true,
-        data: {
-          orders,
-          totalOrders: orders.length,
-          delivared,
-          printed,
-          pending,
-          cancelled,
-          news,
-        },
+        data: dataReport,
         message: 'Diary report',
       };
     } catch (error) {
