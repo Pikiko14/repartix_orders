@@ -8,6 +8,7 @@ import { CreatePaymentDto } from './dto/create-payment.dto';
 import { LiquidateOrderDto } from './dto/liquidate-orders.dto';
 import { MessagePattern, Payload } from '@nestjs/microservices';
 import { QueryParamDto } from 'src/commons/dto/query-param.dto';
+import { QueryReportDto } from 'src/commons/dto/query-report.dto';
 import { LoadDashboardDataDto } from './dto/load-dashboard-data.dto';
 import { FindAndDeleteOrderDto } from './dto/find-and-delete-order.dto';
 
@@ -68,5 +69,10 @@ export class OrdersController {
   @MessagePattern('liquidate-order')
   liquidateOrders(@Payload()  liquidateOrderDto: LiquidateOrderDto) {
     return this.ordersService.liquidateOrders(liquidateOrderDto);
+  }
+
+  @MessagePattern('order-diary-report')
+  diaryReport(@Payload() queryReportDto: QueryReportDto) {
+    return this.ordersService.diaryReport(queryReportDto);
   }
 }

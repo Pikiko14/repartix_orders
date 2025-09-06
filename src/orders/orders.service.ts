@@ -12,6 +12,7 @@ import { HttpStatus, Inject, Injectable } from '@nestjs/common';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { OrderEntity, StatusEnum } from './entities/order.entity';
 import { OrdersRepository } from './repository/orders.repository';
+import { QueryReportDto } from 'src/commons/dto/query-report.dto';
 import { LoadDashboardDataDto } from './dto/load-dashboard-data.dto';
 import { FindAndDeleteOrderDto } from './dto/find-and-delete-order.dto';
 
@@ -295,15 +296,12 @@ export class OrdersService {
       order.print_guide = updateStatusDto.status === 'pending' ? false : true;
 
       if (updateStatusDto.status === 'delivered') {
-        this.client.emit(
-          'update-shipping-list-order',
-          {
-            status: updateStatusDto.status,
-            reference: updateStatusDto.order_reference,
-            parent_id: updateStatusDto?.parent_id,
-            order_id: order.id,
-          }
-        );
+        this.client.emit('update-shipping-list-order', {
+          status: updateStatusDto.status,
+          reference: updateStatusDto.order_reference,
+          parent_id: updateStatusDto?.parent_id,
+          order_id: order.id,
+        });
       }
 
       order = await this.repository.updateStatus(order.id, order);
@@ -502,7 +500,7 @@ export class OrdersService {
     }
   }
 
-  async getOrderByIdArray (ids: string[]) {
+  async getOrderByIdArray(ids: string[]) {
     try {
       return await this.repository.findOrdersByArrayIds(ids);
     } catch (error) {
@@ -517,14 +515,16 @@ export class OrdersService {
   async liquidateOrders(liquidateOrderDto: LiquidateOrderDto) {
     try {
       // validate order is liquidate
-      const order = await this.repository.validateIfOneOrderIsLiquidated(liquidateOrderDto.ordersIds);
+      const order = await this.repository.validateIfOneOrderIsLiquidated(
+        liquidateOrderDto.ordersIds,
+      );
       if (order)
         throw new RpcException({
           error: true,
           status: HttpStatus.NOT_FOUND,
           message: `This order ${order.reference} is already liquidated`,
         });
-      
+
       // handler liquidate
       const orders = await this.repository.liquidateOrders(liquidateOrderDto);
 
@@ -536,7 +536,54 @@ export class OrdersService {
         success: true,
         orders,
         message: 'Orders liquidated successfully',
+      };
+    } catch (error) {
+      throw new RpcException({
+        message: error.message,
+        status: HttpStatus.BAD_REQUEST,
+        error: true,
+      });
+    }
+  }
+
+  async diaryReport(queryReportDto: QueryReportDto) {
+    try {
+      // construimos un $and global
+      const andConditions: any[] = [{ parent_id: queryReportDto.parent_id }];
+
+      // validamos la fecha
+      if (queryReportDto.date) {
+        const date = new Date(queryReportDto.date);
+        const startOfDay = new Date(date.setHours(0, 0, 0, 0));
+        const endOfDay = new Date(date.setHours(23, 59, 59, 999));
+         andConditions.push({ createdAt: { $gte: startOfDay, $lte: endOfDay } });
       }
+
+      // query final
+      const query: Record<string, any> = { $and: andConditions };
+
+      const orders = await this.repository.diaryReport(query);
+      const delivared = orders.filter((el) => el.status === StatusEnum.delivered).length;
+      const printed = orders.filter((el) => el.status === StatusEnum.guide_printed).length;
+      const pending = orders.filter((el) => el.status === StatusEnum.pending).length;
+      const cancelled = orders.filter((el) => el.status === StatusEnum.cancelled).length;
+      const news = orders.filter((el) => el.status === StatusEnum.guide_news).length;
+
+
+
+      return {
+        success: true,
+        data: {
+          orders,
+          totalOrders: orders.length,
+          delivared,
+          printed,
+          pending,
+          cancelled,
+          news,
+        },
+        message: 'Diary report',
+      };
     } catch (error) {
       throw new RpcException({
         message: error.message,

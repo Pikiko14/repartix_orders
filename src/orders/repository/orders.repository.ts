@@ -96,7 +96,7 @@ export class OrdersRepository implements IOrdersRepository {
   ): Promise<PaginationResponseInterface> {
     try {
       // Fetch paginated data
-      const users = await this.model
+      const orders = await this.model
         .find(query)
         .select(fields.length > 0 ? fields.join(' ') : '')
         //.sort({ reference: -1 })
@@ -104,15 +104,15 @@ export class OrdersRepository implements IOrdersRepository {
         .limit(perPage);
 
       // Get total count of matching documents
-      const totalUsers = await this.model.countDocuments(query);
+      const totalOrders = await this.model.countDocuments(query);
 
       // Calculate total pages
-      const totalPages = Math.ceil(totalUsers / perPage);
+      const totalPages = Math.ceil(totalOrders / perPage);
 
       return {
-        data: users,
+        data: orders,
         totalPages,
-        totalItems: totalUsers,
+        totalItems: totalOrders,
       };
     } catch (error: any) {
       throw new RpcException({
@@ -197,7 +197,9 @@ export class OrdersRepository implements IOrdersRepository {
    * liquidate orders
    * @param { LiquidateOrderDto } liquidateOrderDto
    */
-  async liquidateOrders(liquidateOrderDto: LiquidateOrderDto): Promise<UpdateResult> {
+  async liquidateOrders(
+    liquidateOrderDto: LiquidateOrderDto,
+  ): Promise<UpdateResult> {
     try {
       return await this.model.updateMany(
         { _id: { $in: liquidateOrderDto.ordersIds } },
@@ -216,5 +218,33 @@ export class OrdersRepository implements IOrdersRepository {
       _id: { $in: ids },
       settled_to_sender: true,
     });
+  }
+
+  // diary report
+  async diaryReport(query: Record<string, any>): Promise<OrderDocument[]> {
+    try {
+      const orders = await this.model.find(query, {
+        reference: 1,
+        sender_name: {
+          $concat: ['$sender.brand_name'],
+        },
+        client_name: {
+          $concat: ['$client.name', ' ', '$client.last_name'],
+        },
+        status: 1,
+        date: 1,
+        cash_on_delivery: 1,
+        cash_amount: 1,
+        settled_to_sender: 1,
+        settled_date: 1,
+        order_price: 1,
+      });
+      return orders;
+    } catch (error) {
+      throw new RpcException({
+        message: error.message,
+        status: HttpStatus.BAD_REQUEST,
+      });
+    }
   }
 }
