@@ -516,6 +516,16 @@ export class OrdersService {
 
   async liquidateOrders(liquidateOrderDto: LiquidateOrderDto) {
     try {
+      // validate order is liquidate
+      const order = await this.repository.validateIfOneOrderIsLiquidated(liquidateOrderDto.ordersIds);
+      if (order)
+        throw new RpcException({
+          error: true,
+          status: HttpStatus.NOT_FOUND,
+          message: `This order ${order.reference} is already liquidated`,
+        });
+      
+      // handler liquidate
       const orders = await this.repository.liquidateOrders(liquidateOrderDto);
 
       await this.cacheService.removeByPrefix(

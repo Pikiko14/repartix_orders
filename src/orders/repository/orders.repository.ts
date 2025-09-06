@@ -210,4 +210,11 @@ export class OrdersRepository implements IOrdersRepository {
       });
     }
   }
+
+  async validateIfOneOrderIsLiquidated(ids: string[]) {
+    return await this.model.findOne({
+      _id: { $in: ids },
+      settled_to_sender: true,
+    });
+  }
 }
