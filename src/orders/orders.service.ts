@@ -5,6 +5,7 @@ import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
 import { UpdateStatusDto } from './dto/update-status.dto';
 import { CreatePaymentDto } from './dto/create-payment.dto';
+import { LiquidateOrderDto } from './dto/liquidate-orders.dto';
 import { CacheService } from 'src/commons/cache/cache.service';
 import { QueryParamDto } from 'src/commons/dto/query-param.dto';
 import { HttpStatus, Inject, Injectable } from '@nestjs/common';
@@ -504,6 +505,28 @@ export class OrdersService {
   async getOrderByIdArray (ids: string[]) {
     try {
       return await this.repository.findOrdersByArrayIds(ids);
+    } catch (error) {
+      throw new RpcException({
+        message: error.message,
+        status: HttpStatus.BAD_REQUEST,
+        error: true,
+      });
+    }
+  }
+
+  async liquidateOrders(liquidateOrderDto: LiquidateOrderDto) {
+    try {
+      const orders = await this.repository.liquidateOrders(liquidateOrderDto);
+
+      await this.cacheService.removeByPrefix(
+        `keyv:${liquidateOrderDto.parent_id}:orders:list`,
+      );
+
+      return {
+        success: true,
+        orders,
+        message: 'Orders liquidated successfully',
+      }
     } catch (error) {
       throw new RpcException({
         message: error.message,

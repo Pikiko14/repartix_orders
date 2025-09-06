@@ -67,6 +67,7 @@ export class OrderEntity {
   cash_amount?: string;
 
   settled_to_sender?: boolean;
+  settled_date?: Date;
 
   notes?: string;
 

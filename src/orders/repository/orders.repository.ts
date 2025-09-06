@@ -1,4 +1,4 @@
-import { Model } from 'mongoose';
+import { Model, UpdateResult } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { RpcException } from '@nestjs/microservices';
 import { OrderEntity } from '../entities/order.entity';
@@ -6,6 +6,7 @@ import { HttpStatus, Injectable } from '@nestjs/common';
 import { CreateOrderDto } from '../dto/create-order.dto';
 import { UpdateOrderDto } from '../dto/update-order.dto';
 import { Order, OrderDocument } from '../schemas/order.schema';
+import { LiquidateOrderDto } from './../dto/liquidate-orders.dto';
 import { IOrdersRepository } from 'src/commons/interfaces/respository.interface';
 import { PaginationResponseInterface } from 'src/commons/interfaces/response.interface';
 
@@ -190,5 +191,23 @@ export class OrdersRepository implements IOrdersRepository {
    */
   public async findOrdersByArrayIds(ids: string[]): Promise<OrderDocument[]> {
     return await this.model.find({ _id: { $in: ids } });
+  }
+
+  /**
+   * liquidate orders
+   * @param { LiquidateOrderDto } liquidateOrderDto
+   */
+  async liquidateOrders(liquidateOrderDto: LiquidateOrderDto): Promise<UpdateResult> {
+    try {
+      return await this.model.updateMany(
+        { _id: { $in: liquidateOrderDto.ordersIds } },
+        { settled_to_sender: true, settled_date: new Date() },
+      );
+    } catch (error) {
+      throw new RpcException({
+        message: error.message,
+        status: HttpStatus.BAD_REQUEST,
+      });
+    }
   }
 }

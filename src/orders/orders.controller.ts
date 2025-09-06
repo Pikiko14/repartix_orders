@@ -5,6 +5,7 @@ import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
 import { UpdateStatusDto } from './dto/update-status.dto';
 import { CreatePaymentDto } from './dto/create-payment.dto';
+import { LiquidateOrderDto } from './dto/liquidate-orders.dto';
 import { MessagePattern, Payload } from '@nestjs/microservices';
 import { QueryParamDto } from 'src/commons/dto/query-param.dto';
 import { LoadDashboardDataDto } from './dto/load-dashboard-data.dto';
@@ -62,5 +63,10 @@ export class OrdersController {
   @MessagePattern('get-orders-by-id-array')
   getOrderByIdArray(@Payload() ids: string[]) {
     return this.ordersService.getOrderByIdArray(ids);
+  }
+
+  @MessagePattern('liquidate-order')
+  liquidateOrders(@Payload()  liquidateOrderDto: LiquidateOrderDto) {
+    return this.ordersService.liquidateOrders(liquidateOrderDto);
   }
 }
