@@ -569,6 +569,18 @@ export class OrdersService {
         andConditions.push({ createdAt: { $gte: startOfDay, $lte: endOfDay } });
       }
 
+      // validamos courier
+      if (queryReportDto.courier) {
+        const searchRegex = new RegExp(queryReportDto.courier as string, 'i');
+        andConditions.push({
+          $or: [
+            { 'courier.full_name': searchRegex },
+            { 'courier.vehicle_type': searchRegex },
+            { 'courier.license_plate': searchRegex },
+          ],
+        });
+      }
+
       // query final
       const query: Record<string, any> = { $and: andConditions };
 
