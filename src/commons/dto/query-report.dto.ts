@@ -1,4 +1,4 @@
-import { IsOptional } from 'class-validator';
+import { IsOptional } from "class-validator";
 
 export class QueryReportDto {
   @IsOptional()
@@ -6,4 +6,7 @@ export class QueryReportDto {
 
   @IsOptional()
   parent_id?: string;
+
+  @IsOptional()
+  courier?: string;
 }
