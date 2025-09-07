@@ -247,4 +247,19 @@ export class OrdersRepository implements IOrdersRepository {
       });
     }
   }
+
+  // set courier
+  async setCourierInOrders(updateCourierDto: any): Promise<any> {
+    try {
+      return await this.model.updateMany(
+        { _id: { $in: updateCourierDto.ordersIds } },
+        { courier: updateCourierDto.courier },
+      );
+    } catch (error) {
+      throw new RpcException({
+        message: error.message,
+        status: HttpStatus.BAD_REQUEST,
+      });
+    }
+  }
 }

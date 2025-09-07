@@ -556,7 +556,7 @@ export class OrdersService {
           data: dataReport,
           message: 'Diary report (from cache)',
         };
-      } 
+      }
 
       // construimos un $and global
       const andConditions: any[] = [{ parent_id: queryReportDto.parent_id }];
@@ -625,6 +625,32 @@ export class OrdersService {
         message: error.message,
         status: HttpStatus.BAD_REQUEST,
         error: true,
+      });
+    }
+  }
+
+  async setCourierInOrder(updateCourierDto: any) {
+    try {
+      const order = await this.repository.findOrdersByArrayIds(updateCourierDto.ordersIds);
+      if (!order)
+        throw new RpcException({
+          message: `Order with this id: ${updateCourierDto.order_id} not found`,
+          status: HttpStatus.NOT_FOUND,
+          error: true,
+        });
+
+      // set courier
+      await this.repository.setCourierInOrders(updateCourierDto);
+
+      await this.cacheService.removeByPrefix(
+        `keyv:${updateCourierDto.parent_id}:orders:list`,
+      );
+      return true;
+    } catch (error) {
+      throw new RpcException({
+        error: true,
+        status: HttpStatus.BAD_REQUEST,
+        message: error.message,
       });
     }
   }

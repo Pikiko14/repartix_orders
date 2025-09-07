@@ -75,4 +75,9 @@ export class OrdersController {
   diaryReport(@Payload() queryReportDto: QueryReportDto) {
     return this.ordersService.diaryReport(queryReportDto);
   }
+
+  @MessagePattern('set-courier-in-orders')
+  setCourierInOrder(@Payload() updateCourierDto: any) {
+    return this.ordersService.setCourierInOrder(updateCourierDto);
+  }
 }
