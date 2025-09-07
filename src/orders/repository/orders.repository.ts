@@ -223,22 +223,46 @@ export class OrdersRepository implements IOrdersRepository {
   // diary report
   async diaryReport(query: Record<string, any>): Promise<OrderDocument[]> {
     try {
-      const orders = await this.model.find(query, {
-        reference: 1,
-        sender_name: {
-          $concat: ['$sender.brand_name'],
+      const orders = await this.model.aggregate([
+        { $match: query },
+        {
+          $project: {
+            reference: 1,
+            sender_name: '$sender.brand_name',
+            client_name: {
+              $concat: ['$client.name', ' ', '$client.last_name'],
+            },
+            status: 1,
+            date: 1,
+            cash_on_delivery: 1,
+            cash_amount: 1,
+            settled_to_sender: 1,
+            settled_date: 1,
+            order_price: 1,
+            payments: 1,
+            collected: {
+              $sum: {
+                $map: {
+                  input: '$payments',
+                  as: 'p',
+                  in: {
+                    $toInt: {
+                      $replaceAll: {
+                        input: {
+                          $trim: { input: '$$p.amount', chars: ' ' }, // quitamos espacios
+                        },
+                        find: '.',
+                        replacement: '',
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
         },
-        client_name: {
-          $concat: ['$client.name', ' ', '$client.last_name'],
-        },
-        status: 1,
-        date: 1,
-        cash_on_delivery: 1,
-        cash_amount: 1,
-        settled_to_sender: 1,
-        settled_date: 1,
-        order_price: 1,
-      });
+      ]);
+
       return orders;
     } catch (error) {
       throw new RpcException({

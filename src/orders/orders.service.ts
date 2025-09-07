@@ -584,7 +584,7 @@ export class OrdersService {
       // query final
       const query: Record<string, any> = { $and: andConditions };
 
-      const orders = await this.repository.diaryReport(query);
+      const orders = await this.repository.diaryReport(query) as any;
 
       // filter statuses
       const delivared = orders.filter(
@@ -602,6 +602,14 @@ export class OrdersService {
       const news = orders.filter(
         (el) => el.status === StatusEnum.guide_news,
       ).length;
+      const totalCashAmount = orders.reduce(
+        (acc, order) => acc + parseFloat(order.cash_amount.replace('.', '')),
+        0,
+      );
+      const totalCollected = orders.reduce(
+        (acc, order) => acc + parseFloat(order.collected),
+        0,
+      );
 
       // set in cache
       dataReport = {
@@ -612,6 +620,8 @@ export class OrdersService {
         pending,
         cancelled,
         news,
+        totalCashAmount,
+        totalCollected,
       };
       await this.cacheService.setItem(cacheKey, dataReport);
 
