@@ -272,6 +272,114 @@ export class OrdersRepository implements IOrdersRepository {
     }
   }
 
+  async liquidationReport(
+    query: Record<string, any>,
+    porcentageComission: number,
+  ): Promise<OrderDocument[]> {
+    try {
+      const orders = await this.model.aggregate([
+        { $match: query },
+        {
+          $project: {
+            reference: 1,
+            sender_name: '$sender.brand_name',
+            client_name: {
+              $concat: ['$client.name', ' ', '$client.last_name'],
+            },
+            status: 1,
+            date: 1,
+            cash_on_delivery: 1,
+            cash_amount: 1,
+            settled_to_sender: 1,
+            settled_date: 1,
+            order_price: 1,
+            payments: 1,
+            collected: {
+              $sum: {
+                $map: {
+                  input: '$payments',
+                  as: 'p',
+                  in: {
+                    $toInt: {
+                      $replaceAll: {
+                        input: {
+                          $trim: { input: '$$p.amount', chars: ' ' }, // quitamos espacios
+                        },
+                        find: '.',
+                        replacement: '',
+                      },
+                    },
+                  },
+                },
+              },
+            },
+            comission: {
+              $multiply: [
+                {
+                  $toDouble: {
+                    $replaceAll: {
+                      input: { $trim: { input: '$cash_amount', chars: ' ' } },
+                      find: '.',
+                      replacement: '',
+                    },
+                  },
+                },
+                porcentageComission / 100,
+              ],
+            },
+            total_to_liquidate: {
+              $subtract: [
+                {
+                  $toDouble: {
+                    $replaceAll: {
+                      input: { $trim: { input: '$cash_amount', chars: ' ' } },
+                      find: '.',
+                      replacement: '',
+                    },
+                  },
+                },
+                {
+                  $multiply: [
+                    {
+                      $toDouble: {
+                        $replaceAll: {
+                          input: {
+                            $trim: { input: '$cash_amount', chars: ' ' },
+                          },
+                          find: '.',
+                          replacement: '',
+                        },
+                      },
+                    },
+                    porcentageComission / 100,
+                  ],
+                },
+              ],
+            },
+          },
+        },
+      ]);
+
+      return orders;
+    } catch (error) {
+      throw new RpcException({
+        message: error.message,
+        status: HttpStatus.BAD_REQUEST,
+      });
+    }
+  }
+
+  async countOrdersByQuery(query: Record<string, any>): Promise<number> {
+    try {
+      return await this.model.countDocuments(query);
+    } catch (error) {
+      throw new RpcException({
+        message: error.message,
+        status: HttpStatus.BAD_REQUEST,
+      });
+    }
+  }
+
   // set courier
   async setCourierInOrders(updateCourierDto: any): Promise<any> {
     try {

@@ -1,3 +1,4 @@
+import { firstValueFrom } from 'rxjs';
 import { envs } from 'src/configuration';
 import { Utils } from 'src/commons/utils/utils';
 import { CreateNewsDto } from './dto/create-news.dto';
@@ -661,6 +662,84 @@ export class OrdersService {
         error: true,
         status: HttpStatus.BAD_REQUEST,
         message: error.message,
+      });
+    }
+  }
+
+  async reportLiquidation(queryReportDto: QueryReportDto) {
+    try{
+      const cacheKey = `${queryReportDto.parent_id}:orders:list:report-liquidation:${JSON.stringify(queryReportDto)}`;
+      let dataReport = await this.cacheService.getItem(cacheKey);
+      if (dataReport) {
+        return {
+          success: true,
+          data: dataReport,
+          message: 'Liquidation report (from cache)',
+        };
+      }
+
+      // get sender data
+      const { data } = await firstValueFrom(
+        this.client.send('get-sender-by-name', {
+          name: queryReportDto.sender,
+          parent_id: queryReportDto.parent_id,
+        })
+      );
+      let porcentageComission = 0;
+
+      if (data) {
+        const { sender_info } = data;
+        porcentageComission = sender_info.comission_porcent;
+      }
+
+      // construimos un $and global
+      const searchRegex = new RegExp(queryReportDto.sender as string, 'i');
+      const andConditions: any[] = [{
+        settled_to_sender: true,
+        'sender.brand_name': searchRegex,
+        parent_id: queryReportDto.parent_id,
+      }];
+
+      let startOfDay = new Date(new Date().setHours(0, 0, 0, 0));
+      let endOfDay = new Date(new Date().setHours(23, 59, 59, 999));
+
+      if (queryReportDto.from && queryReportDto.to) {
+        const from = new Date(queryReportDto.from);
+        const to = new Date(queryReportDto.to);
+        startOfDay = new Date(from.setHours(0, 0, 0, 0));
+        endOfDay = new Date(to.setHours(23, 59, 59, 999));
+        andConditions.push({ settled_date: { $gte: startOfDay, $lte: endOfDay } });
+      }
+
+      const query: Record<string, any> = { $and: andConditions };
+
+      const orders = await this.repository.liquidationReport(query, porcentageComission) as any;
+
+      const ordersNoSettled = await this.repository.countOrdersByQuery({
+        settled_to_sender: false,
+        'sender.brand_name': searchRegex,
+        parent_id: queryReportDto.parent_id,
+      });
+
+      dataReport = {
+        orders,
+        totalOrdersLiquidated: orders.length,
+        ordersNoSettled,
+      };
+
+      // set en cache
+      await this.cacheService.setItem(cacheKey, dataReport);
+
+      return {
+        success: true,
+        data: dataReport,
+        message: 'Liquidation report',
+      };
+    } catch (error) {
+      throw new RpcException({
+        message: error.message,
+        status: HttpStatus.BAD_REQUEST,
+        error: true,
       });
     }
   }

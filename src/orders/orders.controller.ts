@@ -80,4 +80,9 @@ export class OrdersController {
   setCourierInOrder(@Payload() updateCourierDto: any) {
     return this.ordersService.setCourierInOrder(updateCourierDto);
   }
+
+  @MessagePattern('order-liquidation-report')
+  reportLiquidation(@Payload() queryReportDto: QueryReportDto) {
+    return this.ordersService.reportLiquidation(queryReportDto);
+  }
 }
