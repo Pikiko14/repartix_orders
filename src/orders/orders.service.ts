@@ -719,6 +719,7 @@ export class OrdersService {
         settled_to_sender: false,
         'sender.brand_name': searchRegex,
         parent_id: queryReportDto.parent_id,
+        settled_date: { $gte: startOfDay, $lte: endOfDay }
       });
 
       dataReport = {
