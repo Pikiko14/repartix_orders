@@ -698,6 +698,7 @@ export class OrdersService {
         settled_to_sender: true,
         'sender.brand_name': searchRegex,
         parent_id: queryReportDto.parent_id,
+        cash_on_delivery: true,
       }];
 
       let startOfDay = new Date(new Date().setHours(0, 0, 0, 0));
@@ -719,13 +720,27 @@ export class OrdersService {
         settled_to_sender: false,
         'sender.brand_name': searchRegex,
         parent_id: queryReportDto.parent_id,
-        settled_date: { $gte: startOfDay, $lte: endOfDay }
+        settled_date: { $gte: startOfDay, $lte: endOfDay },
+        //cash_on_delivery: true,
       });
+
+      const totalComission = orders.reduce(
+        (acc, order) => acc + parseFloat(order.comission),
+        0,
+      );
+
+      const totalLiquidate = orders.reduce(
+        (acc, order) => acc + parseFloat(order.total_to_liquidate),
+        0,
+      );
+
 
       dataReport = {
         orders,
         totalOrdersLiquidated: orders.length,
         ordersNoSettled,
+        totalComission,
+        totalLiquidate,
       };
 
       // set en cache
