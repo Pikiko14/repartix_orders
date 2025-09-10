@@ -734,6 +734,10 @@ export class OrdersService {
         0,
       );
 
+      const totalCollection = orders.reduce(
+        (acc, order) => acc + parseFloat(order.cash_amount.replace('.', '')),
+        0,
+      );
 
       dataReport = {
         orders,
@@ -741,6 +745,7 @@ export class OrdersService {
         ordersNoSettled,
         totalComission,
         totalLiquidate,
+        totalCollection,
       };
 
       // set en cache
