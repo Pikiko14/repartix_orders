@@ -2,6 +2,7 @@ import { firstValueFrom } from 'rxjs';
 import { envs } from 'src/configuration';
 import { Utils } from 'src/commons/utils/utils';
 import { CreateNewsDto } from './dto/create-news.dto';
+import { OrderDocument } from './schemas/order.schema';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
 import { UpdateStatusDto } from './dto/update-status.dto';
@@ -305,7 +306,22 @@ export class OrdersService {
         });
       }
 
-      order = await this.repository.updateStatus(order.id, order);
+      order = await this.repository.updateStatus(order.id, order) as OrderDocument;
+
+      // Emitir notificación interna
+      this.client.emit('create-internal-notification', {
+        parent_id: updateStatusDto.parent_id,
+        type: 'order_status_updated',
+        title: 'Estado de Orden Actualizado',
+        message: `La orden ${updateStatusDto.order_reference} cambió a estado: ${updateStatusDto.status}`,
+        metadata: {
+          order_id: order.id,
+          order_reference: updateStatusDto.order_reference,
+          old_status: order.status,
+          new_status: updateStatusDto.status,
+        },
+        priority: updateStatusDto.status === 'delivered' ? 'high' : 'medium',
+      });
 
       return {
         success: true,
@@ -352,6 +368,21 @@ export class OrdersService {
         `keyv:${createNewsDto.parent_id}:orders:list`,
       );
 
+      // Emitir notificación interna
+      this.client.emit('create-internal-notification', {
+        parent_id: createNewsDto.parent_id,
+        type: 'order_news_created',
+        title: 'Nueva Novedad en Orden',
+        message: `Se registró una novedad en la orden ${order.reference}: ${createNewsDto.type_news}`,
+        metadata: {
+          order_id: order.id,
+          order_reference: order.reference,
+          news_type: createNewsDto.type_news,
+          news_description: createNewsDto.description,
+        },
+        priority: 'high',
+      });
+
       return {
         success: true,
         order,
@@ -365,18 +396,20 @@ export class OrdersService {
   async createPayment(createPaymentDto: CreatePaymentDto) {
     try {
       const { file } = createPaymentDto;
+      const orderId = createPaymentDto.order_id;
+      const parentId = createPaymentDto.parent_id;
       delete createPaymentDto.file;
 
       let order = await this.repository.find({
         key: '_id',
-        value: createPaymentDto.order_id,
+        value: orderId,
       });
 
       delete createPaymentDto.order_id;
 
       if (!order)
         throw new RpcException({
-          message: `Order with this id: ${createPaymentDto.order_id} not found`,
+          message: `Order with this id: ${orderId} not found`,
           status: HttpStatus.NOT_FOUND,
           error: true,
         });
@@ -397,8 +430,23 @@ export class OrdersService {
       order = await this.repository.update(order.id, order);
 
       await this.cacheService.removeByPrefix(
-        `keyv:${createPaymentDto.parent_id}:orders:list`,
+        `keyv:${parentId}:orders:list`,
       );
+
+      // Emitir notificación interna
+      this.client.emit('create-internal-notification', {
+        parent_id: parentId,
+        type: 'order_payment_created',
+        title: 'Pago Registrado',
+        message: `Se registró un pago de ${createPaymentDto.amount} en la orden ${order.reference}`,
+        metadata: {
+          order_id: order.id,
+          order_reference: order.reference,
+          payment_method: createPaymentDto.methods,
+          payment_amount: createPaymentDto.amount,
+        },
+        priority: 'medium',
+      });
 
       return {
         success: true,
