@@ -311,7 +311,7 @@ export class OrdersService {
       // Emitir notificación interna
       this.client.emit('create-internal-notification', {
         parent_id: updateStatusDto.parent_id,
-        room: `${updateStatusDto.user_request_id}-${updateStatusDto.parent_id}`,
+        room: `admin-${updateStatusDto.parent_id}`,
         type: 'order_status_updated',
         title: 'Estado de Orden Actualizado',
         message: `La orden ${updateStatusDto.order_reference} cambió a estado: ${updateStatusDto.status}`,
@@ -320,6 +320,7 @@ export class OrdersService {
           order_reference: updateStatusDto.order_reference,
           old_status: order.status,
           new_status: updateStatusDto.status,
+          user_request_id: updateStatusDto.user_request_id, // Mantener info del usuario que hizo la acción
         },
         priority: updateStatusDto.status === 'delivered' ? 'high' : 'medium',
       });
@@ -372,7 +373,7 @@ export class OrdersService {
       // Emitir notificación interna
       this.client.emit('create-internal-notification', {
         parent_id: createNewsDto.parent_id,
-        room: `${createNewsDto.user_request_id}-${createNewsDto.parent_id}`,
+        room: `admin-${createNewsDto.parent_id}`,
         type: 'order_news_created',
         title: 'Nueva Novedad en Orden',
         message: `Se registró una novedad en la orden ${order.reference}: ${createNewsDto.type_news}`,
@@ -381,6 +382,7 @@ export class OrdersService {
           order_reference: order.reference,
           news_type: createNewsDto.type_news,
           news_description: createNewsDto.description,
+          user_request_id: createNewsDto.user_request_id, // Mantener info del usuario que hizo la acción
         },
         priority: 'high',
       });
@@ -438,7 +440,7 @@ export class OrdersService {
       // Emitir notificación interna
       this.client.emit('create-internal-notification', {
         parent_id: parentId,
-        room: `${createPaymentDto.user_request_id}-${createPaymentDto.parent_id}`,
+        room: `admin-${createPaymentDto.parent_id}`,
         type: 'order_payment_created',
         title: 'Pago Registrado',
         message: `Se registró un pago de ${createPaymentDto.amount} en la orden ${order.reference}`,
@@ -447,6 +449,7 @@ export class OrdersService {
           order_reference: order.reference,
           payment_method: createPaymentDto.methods,
           payment_amount: createPaymentDto.amount,
+          user_request_id: createPaymentDto.user_request_id, // Mantener info del usuario que hizo la acción
         },
         priority: 'medium',
       });
