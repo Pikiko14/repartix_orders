@@ -311,6 +311,7 @@ export class OrdersService {
       // Emitir notificación interna
       this.client.emit('create-internal-notification', {
         parent_id: updateStatusDto.parent_id,
+        room: `${updateStatusDto.user_request_id}-${updateStatusDto.parent_id}`,
         type: 'order_status_updated',
         title: 'Estado de Orden Actualizado',
         message: `La orden ${updateStatusDto.order_reference} cambió a estado: ${updateStatusDto.status}`,
@@ -371,6 +372,7 @@ export class OrdersService {
       // Emitir notificación interna
       this.client.emit('create-internal-notification', {
         parent_id: createNewsDto.parent_id,
+        room: `${createNewsDto.user_request_id}-${createNewsDto.parent_id}`,
         type: 'order_news_created',
         title: 'Nueva Novedad en Orden',
         message: `Se registró una novedad en la orden ${order.reference}: ${createNewsDto.type_news}`,
@@ -436,6 +438,7 @@ export class OrdersService {
       // Emitir notificación interna
       this.client.emit('create-internal-notification', {
         parent_id: parentId,
+        room: `${createPaymentDto.user_request_id}-${createPaymentDto.parent_id}`,
         type: 'order_payment_created',
         title: 'Pago Registrado',
         message: `Se registró un pago de ${createPaymentDto.amount} en la orden ${order.reference}`,

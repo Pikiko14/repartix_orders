@@ -23,4 +23,8 @@ export class CreatePaymentDto {
   @IsString()
   @IsOptional()
   date?: string;
+
+  @IsOptional()
+  @IsString()
+  user_request_id?: string;
 }

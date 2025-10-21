@@ -16,4 +16,8 @@ export class UpdateStatusDto {
   @IsString()
   @IsOptional()
   description?: string;
+
+  @IsString()
+  @IsOptional()
+  user_request_id?: string;
 }

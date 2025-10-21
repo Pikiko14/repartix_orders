@@ -23,4 +23,8 @@ export class CreateNewsDto {
   @IsOptional()
   @IsString()
   resolve_answer?: string;
+
+  @IsOptional()
+  @IsString()
+  user_request_id?: string;
 }
