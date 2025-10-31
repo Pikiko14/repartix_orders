@@ -11,6 +11,7 @@ import { QueryParamDto } from 'src/commons/dto/query-param.dto';
 import { QueryReportDto } from 'src/commons/dto/query-report.dto';
 import { LoadDashboardDataDto } from './dto/load-dashboard-data.dto';
 import { FindAndDeleteOrderDto } from './dto/find-and-delete-order.dto';
+import { GenerateReportPdfDto } from './dto/generate-report-pdf.dto';
 
 @Controller()
 export class OrdersController {
@@ -84,5 +85,10 @@ export class OrdersController {
   @MessagePattern('order-liquidation-report')
   reportLiquidation(@Payload() queryReportDto: QueryReportDto) {
     return this.ordersService.reportLiquidation(queryReportDto);
+  }
+
+  @MessagePattern('generate-report-pdf')
+  generateReportPdf(@Payload() generateReportPdfDto: GenerateReportPdfDto) {
+    return this.ordersService.generateReportPdf(generateReportPdfDto);
   }
 }

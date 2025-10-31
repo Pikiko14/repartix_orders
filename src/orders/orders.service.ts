@@ -17,6 +17,9 @@ import { OrdersRepository } from './repository/orders.repository';
 import { QueryReportDto } from 'src/commons/dto/query-report.dto';
 import { LoadDashboardDataDto } from './dto/load-dashboard-data.dto';
 import { FindAndDeleteOrderDto } from './dto/find-and-delete-order.dto';
+import { GenerateReportPdfDto } from './dto/generate-report-pdf.dto';
+import { InjectQueue } from '@nestjs/bull';
+import { Queue } from 'bull';
 
 @Injectable()
 export class OrdersService {
@@ -25,6 +28,7 @@ export class OrdersService {
     private readonly cacheService: CacheService,
     private readonly repository: OrdersRepository,
     @Inject(envs.nats_service_name) private readonly client: ClientProxy,
+    @InjectQueue('reports') private readonly reportsQueue: Queue,
   ) {}
 
   async create(createOrderDto: CreateOrderDto) {
@@ -657,6 +661,9 @@ export class OrdersService {
       const news = orders.filter(
         (el) => el.status === StatusEnum.guide_news,
       ).length;
+      const inProgress = orders.filter(
+        (el) => el.status === StatusEnum.in_progress,
+      ).length;
       const totalCashAmount = orders.reduce(
         (acc, order) => acc + parseFloat(order.cash_amount.replace('.', '')),
         0,
@@ -675,6 +682,7 @@ export class OrdersService {
         pending,
         cancelled,
         news,
+        in_progress: inProgress,
         totalCashAmount,
         totalCollected,
       };
@@ -809,6 +817,35 @@ export class OrdersService {
         success: true,
         data: dataReport,
         message: 'Liquidation report',
+      };
+    } catch (error) {
+      throw new RpcException({
+        message: error.message,
+        status: HttpStatus.BAD_REQUEST,
+        error: true,
+      });
+    }
+  }
+
+  async generateReportPdf(generateReportPdfDto: GenerateReportPdfDto) {
+    try {
+      // Agregar trabajo a la cola para procesamiento en background
+      const job = await this.reportsQueue.add('generate', generateReportPdfDto, {
+        attempts: 3,
+        backoff: {
+          type: 'exponential',
+          delay: 2000,
+        },
+      });
+
+      return {
+        success: true,
+        message: 'Report PDF generation started',
+        data: {
+          job_id: job.id,
+          report_type: generateReportPdfDto.report_type,
+          status: 'processing',
+        },
       };
     } catch (error) {
       throw new RpcException({
