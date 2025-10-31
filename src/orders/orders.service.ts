@@ -855,4 +855,112 @@ export class OrdersService {
       });
     }
   }
+
+  async performanceReport(performanceReportDto: any) {
+    try {
+      const andConditions: any[] = [{ parent_id: performanceReportDto.parent_id }];
+
+      if (performanceReportDto.from && performanceReportDto.to) {
+        const from = new Date(performanceReportDto.from);
+        const to = new Date(performanceReportDto.to);
+        const startOfDay = new Date(from.setHours(0, 0, 0, 0));
+        const endOfDay = new Date(to.setHours(23, 59, 59, 999));
+        andConditions.push({ createdAt: { $gte: startOfDay, $lte: endOfDay } });
+      }
+
+      if (performanceReportDto.courier) {
+        const searchRegex = new RegExp(performanceReportDto.courier as string, 'i');
+        andConditions.push({
+          $or: [
+            { 'courier.full_name': searchRegex },
+            { 'courier.vehicle_type': searchRegex },
+            { 'courier.license_plate': searchRegex },
+          ],
+        });
+      }
+
+      const query: Record<string, any> = { $and: andConditions };
+      const orders = await this.repository.performanceReport(query) as any;
+
+      // Calcular métricas
+      const totalOrders = orders.length;
+      const deliveredOrders = orders.filter((el: any) => el.status === StatusEnum.delivered);
+
+      // Tiempos promedio de entrega (desde creación hasta entrega)
+      const deliveryTimes: number[] = [];
+      deliveredOrders.forEach((order: any) => {
+        const createdAt = new Date(order.createdAt || order.date);
+        const deliveredStatus = order.statuses?.find((s: any) => s.status === 'delivered');
+        if (deliveredStatus) {
+          const deliveredDate = new Date(deliveredStatus.date);
+          const timeDiff = deliveredDate.getTime() - createdAt.getTime();
+          const hoursDiff = timeDiff / (1000 * 60 * 60); // horas
+          if (hoursDiff >= 0) {
+            deliveryTimes.push(hoursDiff);
+          }
+        }
+      });
+
+      const averageDeliveryTime = deliveryTimes.length > 0
+        ? deliveryTimes.reduce((a, b) => a + b, 0) / deliveryTimes.length
+        : 0;
+
+      // Eficiencia (porcentaje de entregadas)
+      const efficiency = totalOrders > 0
+        ? (deliveredOrders.length / totalOrders) * 100
+        : 0;
+
+      // Rutas asignadas (órdenes con courier asignado)
+      const assignedRoutes = orders.filter((el: any) => el.courier && el.courier.full_name).length;
+
+      // Rendimiento por tipo de vehículo
+      const performanceByVehicle: Record<string, any> = {};
+      orders.forEach((order: any) => {
+        const vehicleType = order.courier?.vehicle_type || 'Sin asignar';
+        if (!performanceByVehicle[vehicleType]) {
+          performanceByVehicle[vehicleType] = {
+            vehicle_type: vehicleType,
+            total: 0,
+            delivered: 0,
+            efficiency: 0,
+          };
+        }
+        performanceByVehicle[vehicleType].total++;
+        if (order.status === StatusEnum.delivered) {
+          performanceByVehicle[vehicleType].delivered++;
+        }
+      });
+
+      // Calcular eficiencia por vehículo
+      Object.keys(performanceByVehicle).forEach((key) => {
+        const perf = performanceByVehicle[key];
+        perf.efficiency = perf.total > 0
+          ? (perf.delivered / perf.total) * 100
+          : 0;
+      });
+
+      const dataReport = {
+        totalOrders,
+        deliveredOrders: deliveredOrders.length,
+        averageDeliveryTime: Math.round(averageDeliveryTime * 100) / 100, // 2 decimales
+        averageDeliveryTimeHours: Math.floor(averageDeliveryTime),
+        averageDeliveryTimeMinutes: Math.round((averageDeliveryTime % 1) * 60),
+        efficiency: Math.round(efficiency * 100) / 100, // 2 decimales
+        assignedRoutes,
+        performanceByVehicle: Object.values(performanceByVehicle),
+      };
+
+      return {
+        success: true,
+        data: dataReport,
+        message: 'Performance report',
+      };
+    } catch (error) {
+      throw new RpcException({
+        message: error.message,
+        status: HttpStatus.BAD_REQUEST,
+        error: true,
+      });
+    }
+  }
 }

@@ -12,6 +12,7 @@ import { QueryReportDto } from 'src/commons/dto/query-report.dto';
 import { LoadDashboardDataDto } from './dto/load-dashboard-data.dto';
 import { FindAndDeleteOrderDto } from './dto/find-and-delete-order.dto';
 import { GenerateReportPdfDto } from './dto/generate-report-pdf.dto';
+import { PerformanceReportDto } from './dto/performance-report.dto';
 
 @Controller()
 export class OrdersController {
@@ -90,5 +91,10 @@ export class OrdersController {
   @MessagePattern('generate-report-pdf')
   generateReportPdf(@Payload() generateReportPdfDto: GenerateReportPdfDto) {
     return this.ordersService.generateReportPdf(generateReportPdfDto);
+  }
+
+  @MessagePattern('performance-report')
+  performanceReport(@Payload() performanceReportDto: PerformanceReportDto) {
+    return this.ordersService.performanceReport(performanceReportDto);
   }
 }

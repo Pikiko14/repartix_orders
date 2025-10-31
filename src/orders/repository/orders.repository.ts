@@ -394,4 +394,17 @@ export class OrdersRepository implements IOrdersRepository {
       });
     }
   }
+
+  // performance report
+  async performanceReport(query: Record<string, any>): Promise<OrderDocument[]> {
+    try {
+      const orders = await this.model.find(query).select('status courier statuses createdAt date').lean();
+      return orders as any;
+    } catch (error) {
+      throw new RpcException({
+        message: error.message,
+        status: HttpStatus.BAD_REQUEST,
+      });
+    }
+  }
 }

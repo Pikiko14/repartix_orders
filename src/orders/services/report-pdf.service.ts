@@ -8,6 +8,7 @@ import { ClientProxy } from '@nestjs/microservices';
 import { CloudinaryService } from 'src/commons/cloudinary/cloudinary.service';
 import { OrdersRepository } from '../repository/orders.repository';
 import { GenerateReportPdfDto, ReportType } from '../dto/generate-report-pdf.dto';
+import { StatusEnum } from '../entities/order.entity';
 
 @Injectable()
 export class ReportPdfService {
@@ -166,9 +167,9 @@ export class ReportPdfService {
                   { text: 'Pendiente', style: 'tableHeader' },
                 ],
                 [
-                  { text: this.formatCurrency(totalCashAmount), style: 'tableCell', alignment: 'center' },
-                  { text: this.formatCurrency(totalCollected), style: 'tableCell', alignment: 'center' },
-                  { text: this.formatCurrency(pendingToCollect), style: 'tableCellBold', alignment: 'center' },
+                  { text: `${currency} ${this.formatCurrency(totalCashAmount)}`, style: 'tableCell', alignment: 'center' },
+                  { text: `${currency} ${this.formatCurrency(totalCollected)}`, style: 'tableCell', alignment: 'center' },
+                  { text: `${currency} ${this.formatCurrency(pendingToCollect)}`, style: 'tableCellBold', alignment: 'center' },
                 ],
               ],
             },
@@ -206,10 +207,10 @@ export class ReportPdfService {
                     { text: order.sender_name || '', style: 'tableCellLeft', fontSize: 8 },
                     { text: order.client_name || '', style: 'tableCellLeft', fontSize: 8 },
                     { text: this.getStatusText(order.status), style: 'tableCellLeft', fontSize: 8 },
-                    { text: this.formatCurrency(cashAmount), style: 'tableCell', fontSize: 8, alignment: 'center' },
-                    { text: this.formatCurrency(pendingPerOrder), style: 'tableCell', fontSize: 8, alignment: 'center' },
-                    { text: this.formatCurrency(collected), style: 'tableCell', fontSize: 8, alignment: 'center' },
-                    { text: this.formatCurrency(parseFloat(order.order_price || '0')), style: 'tableCell', fontSize: 8, alignment: 'center' },
+                    { text: `${currency} ${this.formatCurrency(cashAmount)}`, style: 'tableCell', fontSize: 8, alignment: 'center' },
+                    { text: `${currency} ${this.formatCurrency(pendingPerOrder)}`, style: 'tableCell', fontSize: 8, alignment: 'center' },
+                    { text: `${currency} ${this.formatCurrency(collected)}`, style: 'tableCell', fontSize: 8, alignment: 'center' },
+                    { text: `${currency} ${this.formatCurrency(parseFloat(order.order_price || '0'))}`, style: 'tableCell', fontSize: 8, alignment: 'center' },
                   ];
                 }),
               ],
@@ -223,7 +224,7 @@ export class ReportPdfService {
           },
           // Nota sobre moneda
           {
-            text: `Nota: Todos los montos están expresados en ${currency}.`,
+            text: 'Nota: Todos los montos están expresados en el tipo de moneda que tenga configurado el usuario en su marca.',
             style: 'note',
             margin: [0, 20, 0, 10],
             alignment: 'justify',
@@ -425,9 +426,9 @@ export class ReportPdfService {
                 [
                   { text: orders.length.toString(), style: 'tableCell', alignment: 'center' },
                   { text: ordersNoSettled.toString(), style: 'tableCell', alignment: 'center' },
-                  { text: this.formatCurrency(totalComission), style: 'tableCell', alignment: 'center' },
-                  { text: this.formatCurrency(totalCollection), style: 'tableCell', alignment: 'center' },
-                  { text: this.formatCurrency(totalLiquidate), style: 'tableCell', alignment: 'center' },
+                  { text: `${currency} ${this.formatCurrency(totalComission)}`, style: 'tableCell', alignment: 'center' },
+                  { text: `${currency} ${this.formatCurrency(totalCollection)}`, style: 'tableCell', alignment: 'center' },
+                  { text: `${currency} ${this.formatCurrency(totalLiquidate)}`, style: 'tableCell', alignment: 'center' },
                 ],
               ],
             },
@@ -459,10 +460,10 @@ export class ReportPdfService {
                   { text: order.reference || '', style: 'tableCell', fontSize: 8 },
                   { text: order.sender_name || '', style: 'tableCell', fontSize: 8 },
                   { text: order.client_name || '', style: 'tableCell', fontSize: 8 },
-                  { text: this.formatCurrency(parseFloat(order.cash_amount?.replace('.', '') || '0')), style: 'tableCell', fontSize: 8, alignment: 'center' },
-                  { text: this.formatCurrency(parseFloat(order.collected || '0')), style: 'tableCell', fontSize: 8, alignment: 'center' },
-                  { text: this.formatCurrency(parseFloat(order.comission || '0')), style: 'tableCell', fontSize: 8, alignment: 'center' },
-                  { text: this.formatCurrency(parseFloat(order.total_to_liquidate || '0')), style: 'tableCell', fontSize: 8, alignment: 'center' },
+                  { text: `${currency} ${this.formatCurrency(parseFloat(order.cash_amount?.replace('.', '') || '0'))}`, style: 'tableCell', fontSize: 8, alignment: 'center' },
+                  { text: `${currency} ${this.formatCurrency(parseFloat(order.collected || '0'))}`, style: 'tableCell', fontSize: 8, alignment: 'center' },
+                  { text: `${currency} ${this.formatCurrency(parseFloat(order.comission || '0'))}`, style: 'tableCell', fontSize: 8, alignment: 'center' },
+                  { text: `${currency} ${this.formatCurrency(parseFloat(order.total_to_liquidate || '0'))}`, style: 'tableCell', fontSize: 8, alignment: 'center' },
                   { text: this.getStatusText(order.status), style: 'tableCell', fontSize: 8 },
                 ]),
               ],
@@ -476,7 +477,7 @@ export class ReportPdfService {
           },
           // Nota sobre moneda
           {
-            text: `Nota: Todos los montos están expresados en ${currency}.`,
+            text: 'Nota: Todos los montos están expresados en el tipo de moneda que tenga configurado el usuario en su marca.',
             style: 'note',
             margin: [0, 20, 0, 10],
             alignment: 'justify',
@@ -552,6 +553,258 @@ export class ReportPdfService {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     }).format(amount);
+  }
+
+  async generatePerformanceReportPdf(data: GenerateReportPdfDto): Promise<string> {
+    try {
+      // Construir query igual al performanceReport
+      const andConditions: any[] = [{ parent_id: data.parent_id }];
+
+      if (data.from && data.to) {
+        const from = new Date(data.from);
+        const to = new Date(data.to);
+        const startOfDay = new Date(from.setHours(0, 0, 0, 0));
+        const endOfDay = new Date(to.setHours(23, 59, 59, 999));
+        andConditions.push({ createdAt: { $gte: startOfDay, $lte: endOfDay } });
+      }
+
+      if (data.courier) {
+        const searchRegex = new RegExp(data.courier as string, 'i');
+        andConditions.push({
+          $or: [
+            { 'courier.full_name': searchRegex },
+            { 'courier.vehicle_type': searchRegex },
+            { 'courier.license_plate': searchRegex },
+          ],
+        });
+      }
+
+      const query: Record<string, any> = { $and: andConditions };
+      const orders = await this.repository.performanceReport(query) as any;
+
+      // Calcular métricas (igual que en performanceReport del service)
+      const totalOrders = orders.length;
+      const deliveredOrders = orders.filter((el: any) => el.status === StatusEnum.delivered);
+
+      // Tiempos promedio de entrega
+      const deliveryTimes: number[] = [];
+      deliveredOrders.forEach((order: any) => {
+        const createdAt = new Date(order.createdAt || order.date);
+        const deliveredStatus = order.statuses?.find((s: any) => s.status === 'delivered');
+        if (deliveredStatus) {
+          const deliveredDate = new Date(deliveredStatus.date);
+          const timeDiff = deliveredDate.getTime() - createdAt.getTime();
+          const hoursDiff = timeDiff / (1000 * 60 * 60);
+          if (hoursDiff >= 0) {
+            deliveryTimes.push(hoursDiff);
+          }
+        }
+      });
+
+      const averageDeliveryTime = deliveryTimes.length > 0
+        ? deliveryTimes.reduce((a, b) => a + b, 0) / deliveryTimes.length
+        : 0;
+
+      const efficiency = totalOrders > 0
+        ? (deliveredOrders.length / totalOrders) * 100
+        : 0;
+
+      const assignedRoutes = orders.filter((el: any) => el.courier && el.courier.full_name).length;
+
+      // Rendimiento por tipo de vehículo
+      const performanceByVehicle: Record<string, any> = {};
+      orders.forEach((order: any) => {
+        const vehicleType = order.courier?.vehicle_type || 'Sin asignar';
+        if (!performanceByVehicle[vehicleType]) {
+          performanceByVehicle[vehicleType] = {
+            vehicle_type: vehicleType,
+            total: 0,
+            delivered: 0,
+            efficiency: 0,
+          };
+        }
+        performanceByVehicle[vehicleType].total++;
+        if (order.status === StatusEnum.delivered) {
+          performanceByVehicle[vehicleType].delivered++;
+        }
+      });
+
+      Object.keys(performanceByVehicle).forEach((key) => {
+        const perf = performanceByVehicle[key];
+        perf.efficiency = perf.total > 0
+          ? (perf.delivered / perf.total) * 100
+          : 0;
+      });
+
+      // Obtener configuración
+      const { configuration } = await firstValueFrom(
+        this.client.send('find-configuration', data.parent_id),
+      );
+
+      const currency = configuration?.currency || 'COP';
+
+      // Generar PDF
+      const fonts = {
+        Helvetica: {
+          normal: 'Helvetica',
+          bold: 'Helvetica-Bold',
+          italics: 'Helvetica-Oblique',
+          bolditalics: 'Helvetica-BoldOblique',
+        },
+      };
+
+      const printer = new PdfPrinter(fonts);
+
+      const docDefinition: any = {
+        pageSize: 'A4',
+        pageMargins: [40, 80, 40, 60],
+        defaultStyle: { font: 'Helvetica', fontSize: 10 },
+        header: {
+          text: 'REPORTE DE RENDIMIENTO',
+          style: 'header',
+          alignment: 'center',
+          margin: [0, 20, 0, 20],
+        },
+        content: [
+          // Información del reporte
+          ...(data.from && data.to ? [{
+            text: `Período: ${new Date(data.from).toLocaleDateString('es-CO')} - ${new Date(data.to).toLocaleDateString('es-CO')}`,
+            style: 'subheader',
+            margin: [0, 0, 0, 10],
+          }] : []),
+          ...(data.courier ? [{
+            text: `Repartidor: ${data.courier}`,
+            style: 'subheader',
+            margin: [0, 0, 0, 10],
+          }] : []),
+
+          // Estadísticas principales
+          {
+            table: {
+              widths: ['*', '*', '*', '*', '*'],
+              body: [
+                [
+                  { text: 'Total Órdenes', style: 'tableHeader', alignment: 'center' },
+                  { text: 'Entregadas', style: 'tableHeader', alignment: 'center' },
+                  { text: 'Tiempo de Entrega', style: 'tableHeader', alignment: 'center' },
+                  { text: 'Eficiencia', style: 'tableHeader', alignment: 'center' },
+                  { text: 'Rutas Asignadas', style: 'tableHeader', alignment: 'center' },
+                ],
+                [
+                  { text: totalOrders.toString(), style: 'tableCell', alignment: 'center' },
+                  { text: deliveredOrders.length.toString(), style: 'tableCell', alignment: 'center' },
+                  { text: `${Math.floor(averageDeliveryTime)}h ${Math.round((averageDeliveryTime % 1) * 60)}m`, style: 'tableCell', alignment: 'center' },
+                  { text: `${efficiency.toFixed(1)}%`, style: 'tableCell', alignment: 'center' },
+                  { text: assignedRoutes.toString(), style: 'tableCell', alignment: 'center' },
+                ],
+              ],
+            },
+            margin: [0, 0, 0, 20],
+          },
+
+          // Tabla de rendimiento por vehículo
+          {
+            text: 'RENDIMIENTO POR TIPO DE VEHÍCULO',
+            style: 'subheader',
+            margin: [0, 10, 0, 10],
+          },
+          {
+            table: {
+              headerRows: 1,
+              widths: ['*', '*', '*', '*'],
+              body: [
+                [
+                  { text: 'Tipo de Vehículo', style: 'tableHeader', alignment: 'center' },
+                  { text: 'Total', style: 'tableHeader', alignment: 'center' },
+                  { text: 'Entregadas', style: 'tableHeader', alignment: 'center' },
+                  { text: 'Eficiencia', style: 'tableHeader', alignment: 'center' },
+                ],
+                ...Object.values(performanceByVehicle).map((perf: any) => [
+                  { text: perf.vehicle_type || 'Sin asignar', style: 'tableCell', fontSize: 9 },
+                  { text: perf.total.toString(), style: 'tableCell', alignment: 'center', fontSize: 9 },
+                  { text: perf.delivered.toString(), style: 'tableCell', alignment: 'center', fontSize: 9 },
+                  { text: `${perf.efficiency.toFixed(1)}%`, style: 'tableCell', alignment: 'center', fontSize: 9 },
+                ]),
+              ],
+            },
+            layout: {
+              hLineWidth: () => 0.5,
+              vLineWidth: () => 0.5,
+              hLineColor: () => '#aaa',
+              vLineColor: () => '#aaa',
+            },
+          },
+          // Nota sobre moneda
+          {
+            text: 'Nota: Todos los montos están expresados en el tipo de moneda que tenga configurado el usuario en su marca.',
+            style: 'note',
+            margin: [0, 20, 0, 10],
+            alignment: 'justify',
+            italics: true,
+          },
+        ],
+        styles: {
+          header: {
+            fontSize: 18,
+            bold: true,
+          },
+          subheader: {
+            fontSize: 12,
+            bold: true,
+          },
+          tableHeader: {
+            bold: true,
+            fontSize: 9,
+            color: 'black',
+            fillColor: '#eeeeee',
+            alignment: 'center',
+          },
+          tableCell: {
+            fontSize: 9,
+          },
+          note: {
+            fontSize: 8,
+            color: '#666',
+          },
+        },
+        footer: (currentPage: number, pageCount: number) => ({
+          text: `Página ${currentPage} de ${pageCount}`,
+          alignment: 'center',
+          fontSize: 9,
+          margin: [0, 10, 0, 0],
+        }),
+      };
+
+      const pdfDoc = printer.createPdfKitDocument(docDefinition);
+      const filePath = path.join(
+        process.cwd(),
+        `pdfs/report-performance-${data.parent_id}-${Date.now()}.pdf`,
+      );
+
+      // Crear directorio si no existe
+      const dir = path.dirname(filePath);
+      if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true });
+      }
+
+      const writeStream = fs.createWriteStream(filePath);
+      pdfDoc.pipe(writeStream);
+      pdfDoc.end();
+
+      // Esperar a que se escriba el archivo
+      await new Promise<void>((resolve, reject) => {
+        writeStream.on('finish', () => {
+          setTimeout(() => resolve(), 500);
+        });
+        writeStream.on('error', reject);
+        pdfDoc.on('error', reject);
+      });
+
+      return filePath;
+    } catch (error) {
+      this.logger.error(`Error generating performance report PDF: ${error.message}`, error.stack);
+      throw error;
+    }
   }
 
   private getStatusText(status: string): string {

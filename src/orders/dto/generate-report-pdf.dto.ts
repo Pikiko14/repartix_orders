@@ -3,6 +3,7 @@ import { IsEnum, IsOptional, IsString } from 'class-validator';
 export enum ReportType {
   DIARY = 'diary',
   LIQUIDATION = 'liquidation',
+  PERFORMANCE = 'performance',
 }
 
 export class GenerateReportPdfDto {

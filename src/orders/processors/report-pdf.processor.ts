@@ -64,6 +64,8 @@ export class ReportPdfProcessor {
         pdfPath = await this.reportPdfService.generateDiaryReportPdf(data);
       } else if (data.report_type === ReportType.LIQUIDATION) {
         pdfPath = await this.reportPdfService.generateLiquidationReportPdf(data);
+      } else if (data.report_type === ReportType.PERFORMANCE) {
+        pdfPath = await this.reportPdfService.generatePerformanceReportPdf(data);
       } else {
         throw new Error(`Unknown report type: ${data.report_type}`);
       }
@@ -88,7 +90,7 @@ export class ReportPdfProcessor {
         room: `admin-${data.parent_id}`,
         type: 'report_pdf_generated',
         title: `Reporte PDF Generado`,
-        message: `El reporte ${data.report_type === ReportType.DIARY ? 'diario' : 'de liquidación'} está listo para descargar`,
+        message: `El reporte ${data.report_type === ReportType.DIARY ? 'diario' : data.report_type === ReportType.LIQUIDATION ? 'de liquidación' : 'de rendimiento'} está listo para descargar`,
         metadata: {
           pdf_url: cloudinaryResult.secure_url,
           report_type: data.report_type,
