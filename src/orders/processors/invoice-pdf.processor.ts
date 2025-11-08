@@ -83,6 +83,14 @@ export class InvoicePdfProcessor {
         `keyv:${data.parent_id}:orders:list`,
       );
 
+      const orders = await this.repository.findOrdersByArrayIds(data.ordersIds);
+      const senderNames = [...new Set(orders.map(order => order.sender?.brand_name).filter(Boolean))];
+      const senderNamesText = senderNames.length > 0 
+        ? senderNames.length === 1 
+          ? senderNames[0]
+          : `${senderNames[0]}${senderNames.length > 1 ? ` y ${senderNames.length - 1} más` : ''}`
+        : 'remitente';
+
       this.client.emit('create-websocket-notification', {
         success: true,
         data: { pdf: cloudinaryResult.secure_url, model_id: `invoice-${data.parent_id}-${Date.now()}` },
@@ -95,11 +103,12 @@ export class InvoicePdfProcessor {
         room: `admin-${data.parent_id}`,
         type: 'invoice_pdf_generated',
         title: `Factura PDF Generada`,
-        message: `La factura de cobro al remitente está lista para descargar`,
+        message: `La factura de cobro para ${senderNamesText} está lista para descargar`,
         metadata: {
           pdf_url: cloudinaryResult.secure_url,
           filename: filename,
           orders_count: data.ordersIds.length,
+          sender_names: senderNames,
           generated_at: new Date().toISOString(),
         },
         priority: 'high',
