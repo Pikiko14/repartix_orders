@@ -13,6 +13,7 @@ import { LoadDashboardDataDto } from './dto/load-dashboard-data.dto';
 import { FindAndDeleteOrderDto } from './dto/find-and-delete-order.dto';
 import { GenerateReportPdfDto } from './dto/generate-report-pdf.dto';
 import { PerformanceReportDto } from './dto/performance-report.dto';
+import { GenerateInvoicesDto } from './dto/generate-invoices.dto';
 
 @Controller()
 export class OrdersController {
@@ -96,5 +97,10 @@ export class OrdersController {
   @MessagePattern('performance-report')
   performanceReport(@Payload() performanceReportDto: PerformanceReportDto) {
     return this.ordersService.performanceReport(performanceReportDto);
+  }
+
+  @MessagePattern('generate-invoices')
+  generateInvoices(@Payload() generateInvoicesDto: GenerateInvoicesDto) {
+    return this.ordersService.generateInvoices(generateInvoicesDto);
   }
 }

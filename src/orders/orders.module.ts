@@ -11,6 +11,8 @@ import { CloudinaryModule } from 'src/commons/cloudinary/cloudinary.module';
 import { BullModule } from '@nestjs/bull';
 import { ReportPdfProcessor } from './processors/report-pdf.processor';
 import { ReportPdfService } from './services/report-pdf.service';
+import { InvoicePdfProcessor } from './processors/invoice-pdf.processor';
+import { InvoicePdfService } from './services/invoice-pdf.service';
 
 @Module({
   imports: [
@@ -26,8 +28,19 @@ import { ReportPdfService } from './services/report-pdf.service';
     BullModule.registerQueue({
       name: 'reports',
     }),
+    BullModule.registerQueue({
+      name: 'invoices',
+    }),
   ],
   controllers: [OrdersController],
-  providers: [OrdersService, OrdersRepository, Utils, ReportPdfProcessor, ReportPdfService],
+  providers: [
+    OrdersService,
+    OrdersRepository,
+    Utils,
+    ReportPdfProcessor,
+    ReportPdfService,
+    InvoicePdfProcessor,
+    InvoicePdfService,
+  ],
 })
 export class OrdersModule {}

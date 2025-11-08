@@ -18,6 +18,7 @@ import { QueryReportDto } from 'src/commons/dto/query-report.dto';
 import { LoadDashboardDataDto } from './dto/load-dashboard-data.dto';
 import { FindAndDeleteOrderDto } from './dto/find-and-delete-order.dto';
 import { GenerateReportPdfDto } from './dto/generate-report-pdf.dto';
+import { GenerateInvoicesDto } from './dto/generate-invoices.dto';
 import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
 
@@ -29,6 +30,7 @@ export class OrdersService {
     private readonly repository: OrdersRepository,
     @Inject(envs.nats_service_name) private readonly client: ClientProxy,
     @InjectQueue('reports') private readonly reportsQueue: Queue,
+    @InjectQueue('invoices') private readonly invoicesQueue: Queue,
   ) {}
 
   async create(createOrderDto: CreateOrderDto) {
@@ -954,6 +956,46 @@ export class OrdersService {
         success: true,
         data: dataReport,
         message: 'Performance report',
+      };
+    } catch (error) {
+      throw new RpcException({
+        message: error.message,
+        status: HttpStatus.BAD_REQUEST,
+        error: true,
+      });
+    }
+  }
+
+  async generateInvoices(generateInvoicesDto: GenerateInvoicesDto) {
+    try {
+      const orders = await this.repository.findOrdersByArrayIds(
+        generateInvoicesDto.ordersIds,
+      );
+
+      if (!orders || orders.length === 0) {
+        throw new RpcException({
+          message: 'No orders found with the provided IDs',
+          status: HttpStatus.NOT_FOUND,
+          error: true,
+        });
+      }
+
+      const job = await this.invoicesQueue.add('generate', generateInvoicesDto, {
+        attempts: 3,
+        backoff: {
+          type: 'exponential',
+          delay: 2000,
+        },
+      });
+
+      return {
+        success: true,
+        message: 'Invoice generation started',
+        data: {
+          job_id: job.id,
+          orders_count: orders.length,
+          status: 'processing',
+        },
       };
     } catch (error) {
       throw new RpcException({

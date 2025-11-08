@@ -69,6 +69,9 @@ export class OrderEntity {
   settled_to_sender?: boolean;
   settled_date?: Date;
 
+  invoiced_to_sender?: boolean;
+  invoiced_date?: Date;
+
   notes?: string;
 
   payments: {

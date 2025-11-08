@@ -108,6 +108,8 @@ export class Order {
   @Prop({ default: 0 }) cash_amount?: string;
   @Prop({ default: false, index: true }) settled_to_sender?: boolean;
   @Prop() settled_date?: Date;
+  @Prop({ default: false, index: true }) invoiced_to_sender?: boolean;
+  @Prop() invoiced_date?: Date;
 
   @Prop() notes?: string;
   @Prop({ type: [Payment], default: [] }) payments: Payment[];

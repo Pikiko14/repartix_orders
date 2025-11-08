@@ -213,6 +213,20 @@ export class OrdersRepository implements IOrdersRepository {
     }
   }
 
+  async markOrdersAsInvoiced(ordersIds: string[]): Promise<UpdateResult> {
+    try {
+      return await this.model.updateMany(
+        { _id: { $in: ordersIds } },
+        { invoiced_to_sender: true, invoiced_date: new Date() },
+      );
+    } catch (error) {
+      throw new RpcException({
+        message: error.message,
+        status: HttpStatus.BAD_REQUEST,
+      });
+    }
+  }
+
   async validateIfOneOrderIsLiquidated(ids: string[]) {
     return await this.model.findOne({
       _id: { $in: ids },
